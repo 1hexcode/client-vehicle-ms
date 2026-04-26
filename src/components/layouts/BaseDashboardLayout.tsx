@@ -3,23 +3,9 @@
 import React from 'react';
 import { useAuth } from '@/store/AuthContext';
 import { 
-  Car, 
-  Calendar, 
-  LogOut, 
-  LayoutDashboard, 
-  Search, 
-  Bell,
-  History,
-  MessageSquare,
-  User,
-  Users as UsersIcon,
-  Package,
-  FileText,
-  BarChart3,
-  ShoppingCart,
-  ShieldCheck,
-  Menu,
-  X
+  Car, Calendar, LogOut, LayoutDashboard, Search, Bell,
+  History, MessageSquare, User, Users as UsersIcon,
+  Package, BarChart3, ShoppingCart, ShieldCheck, Menu, X
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -30,11 +16,7 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export type NavLink = {
-  name: string;
-  href: string;
-  icon: any;
-};
+export type NavLink = { name: string; href: string; icon: any };
 
 const NAVIGATION: Record<string, NavLink[]> = {
   Admin: [
@@ -67,19 +49,21 @@ export default function BaseDashboardLayout({ children }: { children: React.Reac
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
-  // Fallback to Customer if role is missing (should be handled by middleware)
   const roleLinks = NAVIGATION[user?.role || 'Customer'] || NAVIGATION.Customer;
 
   return (
-    <div className="min-h-screen bg-[#050505] text-zinc-100 flex overflow-hidden">
-      {/* Sidebar - Desktop */}
-      <aside className="w-64 border-r border-white/5 bg-black/20 backdrop-blur-xl hidden lg:flex flex-col fixed inset-y-0 z-50">
+    <div className="min-h-screen bg-[#0A0A0A] text-white flex overflow-hidden">
+      {/* Sidebar */}
+      <aside className="w-64 bg-[#0F0F0F] border-r border-[#222] hidden lg:flex flex-col fixed inset-y-0 z-50">
         <div className="p-6">
-          <Link href="/" className="flex items-center gap-3 mb-10 group">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
-              <Car className="text-white" size={24} />
+          <Link href="/" className="flex items-center gap-2.5 mb-10">
+            <div className="w-9 h-9 bg-[#F97316] rounded-lg flex items-center justify-center">
+              <span className="text-white font-black text-sm font-outfit">V</span>
             </div>
-            <span className="text-2xl font-bold font-outfit tracking-tight">Vehicle<span className="text-primary">MS</span></span>
+            <div>
+              <span className="text-white font-bold text-lg font-outfit">Vehicle</span>
+              <span className="text-[#F97316] font-bold text-lg font-outfit">MS</span>
+            </div>
           </Link>
 
           <nav className="space-y-1">
@@ -91,117 +75,104 @@ export default function BaseDashboardLayout({ children }: { children: React.Reac
                   key={link.name}
                   href={link.href}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
-                    isActive 
-                      ? "bg-primary/10 text-primary border border-primary/20 shadow-[0_0_20px_rgba(99,102,241,0.05)]" 
-                      : "text-zinc-400 hover:text-white hover:bg-white/5 border border-transparent"
+                    "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
+                    isActive
+                      ? "bg-[#F97316] text-white shadow-lg shadow-[#F97316]/20"
+                      : "text-gray-400 hover:text-white hover:bg-[#1A1A1A]"
                   )}
                 >
-                  <Icon size={20} className={cn("transition-colors", isActive ? "text-primary" : "group-hover:text-white")} />
-                  <span className="font-medium text-sm">{link.name}</span>
+                  <Icon size={18} />
+                  <span>{link.name}</span>
                 </Link>
               );
             })}
           </nav>
         </div>
 
-        <div className="mt-auto p-6 border-t border-white/5 space-y-4">
-          <div className="bg-white/5 rounded-2xl p-4">
-            <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold mb-2">Workspace</p>
+        <div className="mt-auto p-6 border-t border-[#222] space-y-4">
+          <div className="bg-[#141414] rounded-xl p-4 border border-[#222]">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-xs uppercase">
+              <div className="w-9 h-9 bg-[#F97316]/10 rounded-lg flex items-center justify-center text-[#F97316] font-bold text-xs">
                 {user?.role?.[0]}
               </div>
-              <div className="flex-1 overflow-hidden">
-                <p className="text-xs font-bold truncate">{user?.role} Portal</p>
-                <p className="text-[10px] text-zinc-500 truncate">Online</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold truncate">{user?.fullName}</p>
+                <p className="text-[10px] text-gray-500">{user?.role} Portal</p>
               </div>
             </div>
           </div>
-          
           <button
             onClick={logout}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-all w-full group text-sm"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-all w-full text-sm font-medium"
           >
-            <LogOut size={20} className="group-hover:translate-x-1 transition-transform" />
-            <span className="font-medium">Logout System</span>
+            <LogOut size={18} />
+            Logout
           </button>
         </div>
       </aside>
 
-      {/* Main Content Area */}
+      {/* Main */}
       <main className="flex-1 lg:ml-64 relative flex flex-col h-screen overflow-hidden">
         {/* Header */}
-        <header className="h-20 border-b border-white/5 bg-black/40 backdrop-blur-md sticky top-0 z-40 px-6 sm:px-8 flex items-center justify-between shrink-0">
+        <header className="h-[72px] border-b border-[#222] bg-[#0F0F0F]/80 backdrop-blur-xl sticky top-0 z-40 px-6 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden p-2 text-zinc-400 hover:text-white"
-            >
-              <Menu size={24} />
+            <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-2 text-gray-400 hover:text-white">
+              <Menu size={22} />
             </button>
-            <div className="hidden sm:block">
-              <h1 className="text-sm font-medium text-zinc-400">
-                System / <span className="text-white capitalize">{pathname.split('/').pop()?.replace('-', ' ')}</span>
-              </h1>
-            </div>
+            <p className="text-sm text-gray-400 hidden sm:block">
+              <span className="text-gray-600">{user?.role} /</span>{" "}
+              <span className="text-white font-medium capitalize">{pathname.split('/').pop()?.replace('-', ' ')}</span>
+            </p>
           </div>
 
-          <div className="flex items-center gap-3 sm:gap-6">
-            <div className="relative group hidden md:block">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-primary transition-colors" size={18} />
-              <input 
-                placeholder="Search resources..." 
-                className="bg-white/5 border border-white/10 rounded-full pl-10 pr-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all w-48 lg:w-64"
+          <div className="flex items-center gap-4">
+            <div className="relative hidden md:block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" size={16} />
+              <input
+                placeholder="Search..."
+                className="bg-[#141414] border border-[#222] rounded-lg pl-9 pr-4 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#F97316]/50 transition-colors w-56"
               />
             </div>
-
-            <div className="flex items-center gap-2 sm:gap-3">
-               {/* Notifications */}
-              <button className="relative p-2 rounded-xl hover:bg-white/5 transition-colors group">
-                <Bell size={20} className="text-zinc-400 group-hover:text-primary transition-colors" />
-                <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-primary rounded-full ring-2 ring-black" />
-              </button>
-              
-              <div className="h-8 w-[1px] bg-white/10 mx-2 hidden sm:block" />
-
-              <div className="flex items-center gap-3">
-                <div className="text-right hidden sm:block">
-                  <p className="text-xs font-bold text-white">{user?.fullName}</p>
-                  <p className="text-[10px] text-zinc-500 uppercase tracking-tighter">{user?.role}</p>
-                </div>
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center font-bold text-white text-xs shadow-lg shadow-primary/20">
-                  {user?.fullName?.[0] || 'U'}
-                </div>
+            <button className="relative p-2 text-gray-400 hover:text-white transition-colors">
+              <Bell size={20} />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#F97316] rounded-full" />
+            </button>
+            <div className="w-px h-8 bg-[#222]" />
+            <div className="flex items-center gap-3">
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-semibold">{user?.fullName}</p>
+                <p className="text-[10px] text-gray-500">{user?.role}</p>
+              </div>
+              <div className="w-10 h-10 bg-[#F97316] rounded-xl flex items-center justify-center font-bold text-sm">
+                {user?.fullName?.[0]}
               </div>
             </div>
           </div>
         </header>
 
-        {/* Dynamic Page Content */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 sm:p-8">
-          <div className="max-w-7xl mx-auto space-y-8">
+        {/* Page content */}
+        <div className="flex-1 overflow-y-auto p-6 md:p-8">
+          <div className="max-w-7xl mx-auto">
             {children}
           </div>
         </div>
       </main>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile overlay */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-[60] lg:hidden">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />
-          <aside className="absolute left-0 top-0 bottom-0 w-72 bg-[#0a0a0a] border-r border-white/10 p-6 animate-slide-in-left">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />
+          <aside className="absolute left-0 top-0 bottom-0 w-72 bg-[#0F0F0F] border-r border-[#222] p-6">
             <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-3">
-                <Car className="text-primary" size={24} />
-                <span className="text-xl font-bold font-outfit">Vehicle<span className="text-primary">MS</span></span>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-[#F97316] rounded-lg flex items-center justify-center">
+                  <span className="text-white font-black text-xs font-outfit">V</span>
+                </div>
+                <span className="font-bold font-outfit">Vehicle<span className="text-[#F97316]">MS</span></span>
               </div>
-              <button onClick={() => setIsMobileMenuOpen(false)}>
-                <X size={24} className="text-zinc-400" />
-              </button>
+              <button onClick={() => setIsMobileMenuOpen(false)}><X size={22} className="text-gray-400" /></button>
             </div>
-            
-            <nav className="space-y-2">
+            <nav className="space-y-1">
               {roleLinks.map((link) => {
                 const Icon = link.icon;
                 const isActive = pathname === link.href;
@@ -211,23 +182,21 @@ export default function BaseDashboardLayout({ children }: { children: React.Reac
                     href={link.href}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={cn(
-                      "flex items-center gap-3 px-4 py-3 rounded-xl transition-all",
-                      isActive ? "bg-primary text-white" : "text-zinc-400 hover:text-white hover:bg-white/5"
+                      "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                      isActive ? "bg-[#F97316] text-white" : "text-gray-400 hover:text-white hover:bg-[#1A1A1A]"
                     )}
                   >
-                    <Icon size={20} />
-                    <span className="font-medium">{link.name}</span>
+                    <Icon size={18} />
+                    <span>{link.name}</span>
                   </Link>
                 );
               })}
             </nav>
-            
             <button
               onClick={logout}
-              className="absolute bottom-6 left-6 right-6 flex items-center gap-3 px-4 py-4 rounded-xl text-red-400 border border-red-500/20 hover:bg-red-500/10 transition-all font-bold text-sm"
+              className="absolute bottom-6 left-6 right-6 flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 border border-red-500/20 hover:bg-red-500/10 transition-all text-sm font-medium"
             >
-              <LogOut size={20} />
-              Logout
+              <LogOut size={18} /> Logout
             </button>
           </aside>
         </div>
