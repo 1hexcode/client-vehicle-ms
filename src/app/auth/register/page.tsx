@@ -7,17 +7,20 @@ import * as z from 'zod';
 import { useAuth } from '@/store/AuthContext';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
+import { api } from '@/lib/api';
 
 const registerSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
+  fullName: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
-  phone: z.string().min(10, 'Phone number must be at least 10 characters'),
+  phoneNumber: z.string().min(10, 'Phone number must be at least 10 characters'),
+  address: z.string().min(5, 'Address is required'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  confirmPassword: z.string(),
+  passwordVerify: z.string(),
+  // vehicleNumber is not in RegisterUserDto, we'll handle it separately or keep it for later
   vehicleNumber: z.string().min(1, 'Vehicle number is required'),
-}).refine((data) => data.password === data.confirmPassword, {
+}).refine((data) => data.password === data.passwordVerify, {
   message: "Passwords don't match",
-  path: ["confirmPassword"],
+  path: ["passwordVerify"],
 });
 
 type RegisterForm = z.infer<typeof registerSchema>;
@@ -25,7 +28,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login } = useAuth();
+  const { register: registerAction } = useAuth();
 
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
@@ -35,17 +38,20 @@ export default function RegisterPage() {
     setIsSubmitting(true);
     setError('');
     try {
-      console.log('Registering with:', data);
-      // Simulate registration
-      setTimeout(() => {
-        login('dummy-token', {
-          id: '2',
-          email: data.email,
-          name: data.name,
-          role: 'Customer'
+      // 1. Register User
+      const { vehicleNumber, ...userData } = data;
+      await registerAction(userData);
+      
+      // 2. Register Vehicle (Optional if you want to do it immediately)
+      try {
+        await api.post('/api/Vehicles', {
+          vehicleNumber: vehicleNumber,
+          type: 'Car' // Default type or add select
         });
-        setIsSubmitting(false);
-      }, 1500);
+      } catch (vErr) {
+        console.error('User registered but vehicle failed:', vErr);
+      }
+
     } catch (err: any) {
       setError(err.message || 'Registration failed.');
       setIsSubmitting(false);
@@ -70,11 +76,11 @@ export default function RegisterPage() {
           <div className="md:col-span-2">
             <label className="block text-sm font-medium mb-2 text-zinc-300">Full Name</label>
             <input
-              {...register('name')}
+              {...register('fullName')}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
               placeholder="John Doe"
             />
-            {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name.message}</p>}
+            {errors.fullName && <p className="text-red-400 text-xs mt-1">{errors.fullName.message}</p>}
           </div>
 
           <div>
@@ -91,11 +97,21 @@ export default function RegisterPage() {
           <div>
             <label className="block text-sm font-medium mb-2 text-zinc-300">Phone Number</label>
             <input
-              {...register('phone')}
+              {...register('phoneNumber')}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
               placeholder="98XXXXXXXX"
             />
-            {errors.phone && <p className="text-red-400 text-xs mt-1">{errors.phone.message}</p>}
+            {errors.phoneNumber && <p className="text-red-400 text-xs mt-1">{errors.phoneNumber.message}</p>}
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium mb-2 text-zinc-300">Address</label>
+            <input
+              {...register('address')}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+              placeholder="Kathmandu, Nepal"
+            />
+            {errors.address && <p className="text-red-400 text-xs mt-1">{errors.address.message}</p>}
           </div>
 
           <div className="md:col-span-2">
@@ -122,12 +138,12 @@ export default function RegisterPage() {
           <div>
             <label className="block text-sm font-medium mb-2 text-zinc-300">Confirm Password</label>
             <input
-              {...register('confirmPassword')}
+              {...register('passwordVerify')}
               type="password"
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
               placeholder="••••••••"
             />
-            {errors.confirmPassword && <p className="text-red-400 text-xs mt-1">{errors.confirmPassword.message}</p>}
+            {errors.passwordVerify && <p className="text-red-400 text-xs mt-1">{errors.passwordVerify.message}</p>}
           </div>
 
           <button

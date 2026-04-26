@@ -30,22 +30,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
     setError('');
     try {
-      // For demo purposes, we'll simulate a successful login if backend isn't ready
-      // In production, this would be: const res = await api.post('/auth/login', data);
-      // login(res.token, res.user);
-      
-      console.log('Logging in with:', data);
-      // Simulating response
-      setTimeout(() => {
-        login('dummy-token', {
-          id: '1',
-          email: data.email,
-          name: 'Abhishek',
-          role: data.email.includes('admin') ? 'Admin' : data.email.includes('staff') ? 'Staff' : 'Customer'
-        });
-        setIsSubmitting(false);
-      }, 1500);
-
+      await login(data.email, data.password);
     } catch (err: any) {
       setError(err.message || 'Login failed. Please check your credentials.');
       setIsSubmitting(false);
