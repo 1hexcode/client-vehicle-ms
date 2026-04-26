@@ -7,6 +7,8 @@ export const metadata: Metadata = {
   description: "Advanced management system for vehicle parts, inventory, and suppliers.",
 };
 
+import { AuthProvider } from "@/store/AuthContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -15,8 +17,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Navbar />
-        {children}
+        <AuthProvider>
+          <Navbar />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
