@@ -12,18 +12,34 @@ import {
   UserPlus,
   RefreshCw,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Edit,
+  Users,
+  ShieldCheck,
+  ShieldAlert
 } from "lucide-react";
 import toast from "react-hot-toast";
 import Modal from "@/components/ui/Modal";
 import StaffForm from "@/components/admin/StaffForm";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { StatsCard } from "@/components/ui/StatsCard";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 export default function StaffManagementPage() {
   const [staff, setStaff] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<Staff | undefined>();
+  const [staffToDelete, setStaffToDelete] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const fetchStaff = async () => {
@@ -56,19 +72,29 @@ export default function StaffManagementPage() {
     setIsModalOpen(true);
   };
 
-  const handleDeleteStaff = async (id: string) => {
-    if (!confirm("Are you sure you want to disable this staff account?")) return;
+  const handleDeleteClick = (id: string) => {
+    setStaffToDelete(id);
+    setIsConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!staffToDelete) return;
 
     try {
-      const response: ApiResponse<string> = await api.delete(`/api/Staff/${id}`);
+      setSubmitting(true);
+      const response: ApiResponse<string> = await api.delete(`/api/Staff/${staffToDelete}`);
       if (response.success) {
         toast.success("Staff account disabled");
+        setIsConfirmOpen(false);
         fetchStaff();
       } else {
         toast.error(response.message);
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to disable staff");
+    } finally {
+      setSubmitting(false);
+      setStaffToDelete(null);
     }
   };
 
@@ -130,22 +156,24 @@ export default function StaffManagementPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-            <p className="text-zinc-500 dark:text-zinc-400 text-sm font-medium">Total Staff</p>
-            <h3 className="text-2xl font-bold mt-1">{staff.length}</h3>
-          </div>
-          <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-            <p className="text-zinc-500 dark:text-zinc-400 text-sm font-medium">Active Staff</p>
-            <h3 className="text-2xl font-bold mt-1 text-green-600">
-              {staff.filter(s => s.isActive).length}
-            </h3>
-          </div>
-          <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-            <p className="text-zinc-500 dark:text-zinc-400 text-sm font-medium">Inactive Staff</p>
-            <h3 className="text-2xl font-bold mt-1 text-red-600">
-              {staff.filter(s => !s.isActive).length}
-            </h3>
-          </div>
+          <StatsCard 
+            label="Total Staff"
+            value={staff.length}
+            icon={Users}
+            variant="default"
+          />
+          <StatsCard 
+            label="Active Staff"
+            value={staff.filter(s => s.isActive).length}
+            icon={ShieldCheck}
+            variant="success"
+          />
+          <StatsCard 
+            label="Inactive Staff"
+            value={staff.filter(s => !s.isActive).length}
+            icon={ShieldAlert}
+            variant="danger"
+          />
         </div>
 
         <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-xl overflow-hidden">
@@ -219,22 +247,31 @@ export default function StaffManagementPage() {
                         {member.address}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => handleEditStaff(member)}
-                            className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 transition-colors"
-                            title="Edit"
-                          >
-                            <UserCog className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteStaff(member.id)}
-                            className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 transition-colors"
-                            title="Disable"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                              <MoreVertical className="w-5 h-5 text-zinc-500" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={() => handleEditStaff(member)}
+                              className="flex items-center gap-2 cursor-pointer"
+                            >
+                              <Edit className="w-4 h-4 text-blue-500" />
+                              Edit Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleDeleteClick(member.id)}
+                              className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Disable Account
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </td>
                     </tr>
                   ))
@@ -265,6 +302,17 @@ export default function StaffManagementPage() {
           isLoading={submitting}
         />
       </Modal>
+
+      <ConfirmDialog 
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Disable Staff Account"
+        description="Are you sure you want to disable this staff member? They will no longer be able to log into the system until their account is reactivated."
+        confirmText="Yes, Disable"
+        isLoading={submitting}
+        variant="destructive"
+      />
     </>
   );
 }
