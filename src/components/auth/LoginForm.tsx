@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAuth } from '@/store/AuthContext';
 import Link from 'next/link';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
 
 import toast from 'react-hot-toast';
@@ -18,22 +19,38 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginForm() {
+  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (searchParams.get('verified') === 'true') {
+      toast.success('Email verified successfully! You can now log in.');
+    }
+  }, [searchParams]);
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = async (data: LoginFormData) => {
+  const onLoginSubmit = async (data: LoginFormData) => {
     setIsSubmitting(true);
-    const toastId = toast.loading('Attempting to sign in...');
+    const toastId = toast.loading('Verifying credentials...');
     try {
-      await login(data.email, data.password);
-      toast.success('Successfully logged in!', { id: toastId });
+      const response = await login(data.email, data.password);
+      if (response.success) {
+        toast.success('Successfully logged in!', { id: toastId });
+      } else if (response.message === 'EMAIL_NOT_VERIFIED') {
+        toast.error('Email not verified. Please verify your email.', { id: toastId });
+        router.push(`/auth/verify?email=${data.email}`);
+      } else {
+        toast.error(response.message || 'Login failed', { id: toastId });
+      }
     } catch (err: any) {
       toast.error(err.message || 'Login failed. Please check your credentials.', { id: toastId });
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -52,7 +69,7 @@ export default function LoginForm() {
           <p className="text-gray-500 text-sm">Enter your credentials to access the portal</p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onLoginSubmit)} className="space-y-6">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">Email Address</label>
             <input

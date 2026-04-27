@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAuth } from '@/store/AuthContext';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { api } from '@/lib/api';
 
@@ -28,6 +29,7 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function RegisterForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
   const { register: registerAction } = useAuth();
 
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
@@ -42,9 +44,11 @@ export default function RegisterForm() {
       await registerAction(userData);
       try {
         await api.post('/api/Vehicles', { vehicleNumber, type: 'Car' });
-        toast.success('Account verified and vehicle registered!', { id: toastId });
+        toast.success('Registration successful! Please verify your email.', { id: toastId });
+        router.push(`/auth/verify?email=${data.email}`);
       } catch (vErr) {
-        toast.success('Account verified!', { id: toastId });
+        toast.success('Registration successful! Please verify your email.', { id: toastId });
+        router.push(`/auth/verify?email=${data.email}`);
         console.error('User registered but vehicle failed:', vErr);
       }
     } catch (err: any) {
