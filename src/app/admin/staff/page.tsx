@@ -21,6 +21,7 @@ import {
 import toast from "react-hot-toast";
 import Modal from "@/components/ui/Modal";
 import StaffForm from "@/components/admin/StaffForm";
+import Switch from "@/components/ui/Switch";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -96,6 +97,20 @@ export default function StaffManagementPage() {
     } finally {
       setSubmitting(false);
       setStaffToDelete(null);
+    }
+  };
+
+  const handleToggleStatus = async (member: Staff) => {
+    try {
+      const response: ApiResponse<any> = await api.put(`/api/Staff/${member.id}`, { ...member, isActive: !member.isActive });
+      if (response.success) {
+        toast.success(`Account ${!member.isActive ? 'activated' : 'deactivated'}`);
+        fetchStaff();
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update status");
     }
   };
 
@@ -208,14 +223,17 @@ export default function StaffManagementPage() {
                 key: "status",
                 header: "Status",
                 render: (member) => (
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
-                    member.isActive 
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
-                      : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                  }`}>
-                    {member.isActive ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
-                    {member.isActive ? "Active" : "Inactive"}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <Switch 
+                      checked={member.isActive} 
+                      onChange={() => handleToggleStatus(member)}
+                    />
+                    <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                      member.isActive ? 'text-green-500' : 'text-zinc-500'
+                    }`}>
+                      {member.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </div>
                 ),
               },
               {

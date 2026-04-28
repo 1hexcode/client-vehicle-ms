@@ -26,7 +26,7 @@ import { StatsCard } from "@/components/ui/StatsCard";
 import Modal from "@/components/ui/Modal";
 import DataTable from "@/components/ui/DataTable";
 import InventoryForm from "@/components/admin/InventoryForm";
-import CategoryForm from "@/components/admin/CategoryForm";
+import Switch from "@/components/ui/Switch";
 import { PartCategory, Vendor } from "@/types";
 import {
   DropdownMenu,
@@ -47,11 +47,6 @@ export default function InventoryPage() {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPart, setSelectedPart] = useState<Part | undefined>();
-  
-  const [isCatModalOpen, setIsCatModalOpen] = useState(false);
-  const [selectedCat, setSelectedCat] = useState<PartCategory | undefined>();
-  const [catSearch, setCatSearch] = useState("");
-
   const [submitting, setSubmitting] = useState(false);
 
   const fetchInitialData = async () => {
@@ -149,57 +144,17 @@ export default function InventoryPage() {
     }
   };
 
-  const handleAddCat = () => {
-    setSelectedCat(undefined);
-    setIsCatModalOpen(true);
-  };
-
-  const handleEditCat = (cat: PartCategory) => {
-    setSelectedCat(cat);
-    setIsCatModalOpen(true);
-  };
-
-  const handleCatSubmit = async (data: any) => {
+  const handleTogglePartStatus = async (part: Part) => {
     try {
-      setSubmitting(true);
-      if (selectedCat) {
-        const response: ApiResponse<PartCategory> = await api.put(`/api/part-categories/${selectedCat.id}`, data);
-        if (response.success) {
-          toast.success("Category updated");
-          setIsCatModalOpen(false);
-          fetchInitialData();
-        }
-      } else {
-        const response: ApiResponse<PartCategory> = await api.post("/api/part-categories", data);
-        if (response.success) {
-          toast.success("Category created");
-          setIsCatModalOpen(false);
-          fetchInitialData();
-        }
-      }
-    } catch (error) {
-      toast.error("An error occurred");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleDeleteCat = async (id: string) => {
-    if (!confirm("Are you sure you want to disable this category?")) return;
-    try {
-      const response: ApiResponse<string> = await api.delete(`/api/part-categories/${id}`);
+      const response = await api.put(`/api/Parts/${part.id}`, { ...part, isActive: !part.isActive });
       if (response.success) {
-        toast.success("Category disabled");
+        toast.success(`Part ${!part.isActive ? 'enabled' : 'disabled'}`);
         fetchInitialData();
       }
     } catch (error) {
-      toast.error("Failed to disable category");
+      toast.error("Failed to update part status");
     }
   };
-
-  const filteredCats = categories.filter((c) => 
-    c.name.toLowerCase().includes(catSearch.toLowerCase())
-  );
 
   return (
     <div className="space-y-6">
@@ -316,9 +271,15 @@ export default function InventoryPage() {
               key: "status",
               header: "Status",
               render: (part) => (
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${part.isActive ? "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-500" : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-500"}`}>
-                  {part.isActive ? "Active" : "Disabled"}
-                </span>
+                <div className="flex items-center gap-2">
+                  <Switch 
+                    checked={part.isActive} 
+                    onChange={() => handleTogglePartStatus(part)}
+                  />
+                  <span className={`text-[10px] font-bold uppercase ${part.isActive ? "text-green-500" : "text-zinc-500"}`}>
+                    {part.isActive ? "Active" : "Disabled"}
+                  </span>
+                </div>
               ),
             },
             {
@@ -376,107 +337,6 @@ export default function InventoryPage() {
             </div>
           }
         />
-      
-      {/* Categories Section */}
-      <div className="pt-8 space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-t border-zinc-200 dark:border-zinc-800 pt-8">
-          <div>
-            <h2 className="text-2xl font-bold text-zinc-900 dark:text-white font-outfit flex items-center gap-3">
-              <Filter className="w-6 h-6 text-orange-600" />
-              Categories Management
-            </h2>
-            <p className="text-zinc-500 dark:text-zinc-400 mt-1">Organize your parts into categories.</p>
-          </div>
-          <button 
-            onClick={handleAddCat}
-            className="flex items-center gap-2 px-5 py-2.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-900 text-white rounded-xl font-medium shadow-lg transition-all active:scale-95 w-fit"
-          >
-            <Plus className="w-4 h-4" />
-            Add Category
-          </button>
-        </div>
-
-        <DataTable
-          columns={[
-            {
-              key: "name",
-              header: "Category Name",
-              render: (cat) => (
-                <span className="font-semibold text-zinc-900 dark:text-white">{cat.name}</span>
-              ),
-            },
-            {
-              key: "description",
-              header: "Description",
-              render: (cat) => (
-                <span className="text-sm text-zinc-500">{cat.description || "No description"}</span>
-              ),
-            },
-            {
-              key: "status",
-              header: "Status",
-              render: (cat) => (
-                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${cat.isActive ? "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-500" : "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-500"}`}>
-                  {cat.isActive ? "Active" : "Disabled"}
-                </span>
-              ),
-            },
-            {
-              key: "actions",
-              header: "Actions",
-              className: "text-right",
-              render: (cat) => (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-                      <MoreVertical className="w-5 h-5 text-zinc-500" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      onClick={() => handleEditCat(cat)}
-                      className="flex items-center gap-2 cursor-pointer"
-                    >
-                      <Edit className="w-4 h-4 text-blue-500" />
-                      Edit Category
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => handleDeleteCat(cat.id)}
-                      className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Disable Category
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ),
-            },
-          ]}
-          data={filteredCats}
-          loading={loading}
-          keyExtractor={(c) => c.id}
-          searchValue={catSearch}
-          onSearchChange={setCatSearch}
-          searchPlaceholder="Search categories..."
-          onRefresh={fetchInitialData}
-          emptyIcon={Filter}
-          emptyMessage="No categories found."
-        />
-      </div>
-
-      <Modal
-        isOpen={isCatModalOpen}
-        onClose={() => setIsCatModalOpen(false)}
-        title={selectedCat ? "Edit Category" : "Add New Category"}
-      >
-        <CategoryForm 
-          initialData={selectedCat}
-          onSubmit={handleCatSubmit}
-          isLoading={submitting}
-        />
-      </Modal>
     </div>
   );
 }

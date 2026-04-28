@@ -20,6 +20,7 @@ import {
 import toast from "react-hot-toast";
 import Modal from "@/components/ui/Modal";
 import VendorForm from "@/components/admin/VendorForm";
+import Switch from "@/components/ui/Switch";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -98,6 +99,20 @@ export default function VendorsManagementPage() {
     } finally {
       setSubmitting(false);
       setVendorToDelete(null);
+    }
+  };
+
+  const handleToggleStatus = async (vendor: Vendor) => {
+    try {
+      const response: ApiResponse<any> = await api.put(`/api/vendors/${vendor.id}`, { ...vendor, isActive: !vendor.isActive });
+      if (response.success) {
+        toast.success(`Vendor ${!vendor.isActive ? 'enabled' : 'disabled'}`);
+        fetchVendors();
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update status");
     }
   };
 
@@ -224,26 +239,23 @@ export default function VendorsManagementPage() {
                 </div>
               ),
             },
-            {
-              key: "status",
-              header: "Status",
-              render: (vendor) => (
-                <span
-                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
-                    vendor.isActive
-                      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                      : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                  }`}
-                >
-                  {vendor.isActive ? (
-                    <CheckCircle2 className="w-3 h-3" />
-                  ) : (
-                    <XCircle className="w-3 h-3" />
-                  )}
-                  {vendor.isActive ? "Active" : "Inactive"}
-                </span>
-              ),
-            },
+              {
+                key: "status",
+                header: "Status",
+                render: (vendor) => (
+                  <div className="flex items-center gap-3">
+                    <Switch 
+                      checked={vendor.isActive} 
+                      onChange={() => handleToggleStatus(vendor)}
+                    />
+                    <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                      vendor.isActive ? "text-green-500" : "text-zinc-500"
+                    }`}>
+                      {vendor.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                ),
+              },
             {
               key: "dueAmount",
               header: "Due Amount",
