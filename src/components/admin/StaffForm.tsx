@@ -13,7 +13,7 @@ const staffSchema = z.object({
   address: z.string().min(5, "Address must be at least 5 characters"),
   password: z.string().min(6, "Password must be at least 6 characters").optional(),
   passwordVerify: z.string().optional(),
-  isActive: z.boolean().default(true),
+  isActive: z.boolean(),
 }).refine((data) => {
   if (!data.password && !data.passwordVerify) return true;
   return data.password === data.passwordVerify;
