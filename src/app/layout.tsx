@@ -5,6 +5,9 @@ import PageWrapper from "@/components/PageWrapper";
 export const metadata: Metadata = {
   title: "Vehicle Parts MS | Premium Inventory Management",
   description: "Advanced management system for vehicle parts, inventory, and suppliers.",
+  icons: {
+    icon: "/images/logo-web.jpeg",
+  },
 };
 
 export default function RootLayout({

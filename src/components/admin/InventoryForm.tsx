@@ -3,13 +3,14 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Part, PartCategory } from "@/types";
+import { Part, PartCategory, Vendor } from "@/types";
 import { Loader2 } from "lucide-react";
 
 const inventorySchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   sku: z.string().min(3, "SKU must be at least 3 characters"),
   categoryId: z.string().min(1, "Please select a category"),
+  vendorId: z.string().min(1, "Please select a vendor"),
   description: z.string().optional(),
   costPrice: z.number().min(0, "Cost price cannot be negative"),
   unitPrice: z.number().min(0, "Unit price cannot be negative"),
@@ -22,6 +23,7 @@ type InventoryFormValues = z.infer<typeof inventorySchema>;
 interface InventoryFormProps {
   initialData?: Part;
   categories: PartCategory[];
+  vendors: Vendor[];
   onSubmit: (data: InventoryFormValues) => Promise<void>;
   isLoading: boolean;
 }
@@ -29,6 +31,7 @@ interface InventoryFormProps {
 export default function InventoryForm({
   initialData,
   categories,
+  vendors,
   onSubmit,
   isLoading,
 }: InventoryFormProps) {
@@ -42,6 +45,7 @@ export default function InventoryForm({
       name: initialData?.name || "",
       sku: initialData?.sku || "",
       categoryId: initialData?.categoryId || "",
+      vendorId: initialData?.vendorId || "", 
       description: initialData?.description || "",
       costPrice: initialData?.costPrice || 0,
       unitPrice: initialData?.unitPrice || 0,
@@ -98,6 +102,26 @@ export default function InventoryForm({
           </select>
           {errors.categoryId && (
             <p className="text-xs text-red-500">{errors.categoryId.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            Vendor *
+          </label>
+          <select
+            {...register("vendorId")}
+            className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
+          >
+            <option value="">Select a vendor</option>
+            {vendors.map((vendor) => (
+              <option key={vendor.id} value={vendor.id}>
+                {vendor.name}
+              </option>
+            ))}
+          </select>
+          {errors.vendorId && (
+            <p className="text-xs text-red-500">{errors.vendorId.message}</p>
           )}
         </div>
 

@@ -2,6 +2,8 @@ export interface Part {
   id: string;
   categoryId: string;
   categoryName?: string;
+  vendorId?: string;
+  vendorName?: string;
   name: string;
   sku: string;
   description?: string;

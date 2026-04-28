@@ -57,9 +57,7 @@ export default function BaseDashboardLayout({ children }: { children: React.Reac
       <aside className="w-64 bg-[#0F0F0F] border-r border-[#222] hidden lg:flex flex-col fixed inset-y-0 z-50">
         <div className="p-6">
           <Link href="/" className="flex items-center gap-2.5 mb-10">
-            <div className="w-9 h-9 bg-[#F97316] rounded-lg flex items-center justify-center">
-              <span className="text-white font-black text-sm font-outfit">V</span>
-            </div>
+            <img src="/images/logo.jpeg" alt="Logo" className="w-10 h-10 rounded-lg object-cover" />
             <div>
               <span className="text-white font-bold text-lg font-outfit">Vehicle</span>
               <span className="text-[#F97316] font-bold text-lg font-outfit">MS</span>
@@ -165,9 +163,7 @@ export default function BaseDashboardLayout({ children }: { children: React.Reac
           <aside className="absolute left-0 top-0 bottom-0 w-72 bg-[#0F0F0F] border-r border-[#222] p-6">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-[#F97316] rounded-lg flex items-center justify-center">
-                  <span className="text-white font-black text-xs font-outfit">V</span>
-                </div>
+                <img src="/images/logo.jpeg" alt="Logo" className="w-8 h-8 rounded-lg object-cover" />
                 <span className="font-bold font-outfit">Vehicle<span className="text-[#F97316]">MS</span></span>
               </div>
               <button onClick={() => setIsMobileMenuOpen(false)}><X size={22} className="text-gray-400" /></button>

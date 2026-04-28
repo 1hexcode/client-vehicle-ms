@@ -15,35 +15,88 @@ import {
   Filter,
   Package,
   History,
-  Loader2
+  Loader2,
+  Store,
+  DollarSign,
+  CheckCircle2
 } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import { DashboardCard } from "@/components/ui/DashboardCard";
+import { StatsCard } from "@/components/ui/StatsCard";
+import Modal from "@/components/ui/Modal";
+import InventoryForm from "@/components/admin/InventoryForm";
+import { PartCategory, Vendor } from "@/types";
 
 export default function InventoryPage() {
   const [parts, setParts] = useState<Part[]>([]);
+  const [categories, setCategories] = useState<PartCategory[]>([]);
+  const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "low-stock">("all");
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPart, setSelectedPart] = useState<Part | undefined>();
+  const [submitting, setSubmitting] = useState(false);
 
-  const fetchParts = async () => {
+  const fetchInitialData = async () => {
     try {
       setLoading(true);
-      const response: ApiResponse<Part[]> = await api.get("/api/Parts");
-      if (response.success && response.data) {
-        setParts(response.data);
-      }
+      const [partsRes, catsRes, vendorsRes]: [ApiResponse<Part[]>, ApiResponse<PartCategory[]>, ApiResponse<Vendor[]>] = await Promise.all([
+        api.get("/api/Parts"),
+        api.get("/api/PartCategories"),
+        api.get("/api/Vendors")
+      ]);
+
+      if (partsRes.success) setParts(partsRes.data || []);
+      if (catsRes.success) setCategories(catsRes.data || []);
+      if (vendorsRes.success) setVendors(vendorsRes.data || []);
+      
     } catch (error) {
-      toast.error("Failed to fetch inventory");
+      toast.error("Failed to fetch data");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchParts();
+    fetchInitialData();
   }, []);
+
+  const handleAddPart = () => {
+    setSelectedPart(undefined);
+    setIsModalOpen(true);
+  };
+
+  const handleEditPart = (part: Part) => {
+    setSelectedPart(part);
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (data: any) => {
+    try {
+      setSubmitting(true);
+      if (selectedPart) {
+        const response: ApiResponse<Part> = await api.put(`/api/Parts/${selectedPart.id}`, data);
+        if (response.success) {
+          toast.success("Part updated");
+          setIsModalOpen(false);
+          fetchInitialData();
+        }
+      } else {
+        const response: ApiResponse<Part> = await api.post("/api/Parts", data);
+        if (response.success) {
+          toast.success("Part added to inventory");
+          setIsModalOpen(false);
+          fetchInitialData();
+        }
+      }
+    } catch (error) {
+      toast.error("An error occurred");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const filteredParts = parts.filter((part) => {
     const matchesSearch = 
@@ -69,7 +122,7 @@ export default function InventoryPage() {
       const response: ApiResponse<string> = await api.delete(`/api/Parts/${id}`);
       if (response.success) {
         toast.success("Part disabled");
-        fetchParts();
+        fetchInitialData();
       }
     } catch (error) {
       toast.error("Failed to disable part");
@@ -80,45 +133,62 @@ export default function InventoryPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-900 dark:text-white font-outfit">Inventory Management</h1>
-          <p className="text-zinc-500 dark:text-zinc-400">Track and manage your vehicle parts stock.</p>
+          <h1 className="text-3xl font-bold text-zinc-900 dark:text-white font-outfit flex items-center gap-3">
+            <Package className="w-8 h-8 text-orange-600" />
+            Inventory Management
+          </h1>
+          <p className="text-zinc-500 dark:text-zinc-400 mt-1">Track and manage your vehicle parts stock.</p>
         </div>
-        <Link 
-          href="/admin/inventory/add"
-          className="flex items-center gap-2 px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-semibold shadow-lg shadow-orange-500/30 transition-all w-fit"
+        <button 
+          onClick={handleAddPart}
+          className="flex items-center gap-2 px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-semibold shadow-lg shadow-orange-500/30 transition-all active:scale-95 w-fit"
         >
           <Plus className="w-5 h-5" />
           Add New Part
-        </Link>
+        </button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <DashboardCard 
+        <StatsCard 
           label="Total Parts" 
           value={stats.totalItems} 
           icon={Package}
-          color="#F97316"
+          variant="default"
         />
-        <DashboardCard 
+        <StatsCard 
           label="Low Stock" 
           value={stats.lowStock} 
           icon={AlertTriangle}
-          color="#EF4444"
-          trend={stats.lowStock > 0 ? "Attention Required" : undefined}
+          variant="danger"
+          description={stats.lowStock > 0 ? "Reorder required" : "Stock healthy"}
         />
-        <DashboardCard 
+        <StatsCard 
           label="Inventory Value" 
-          value={stats.totalValue.toLocaleString()} 
+          value={`Rs. ${stats.totalValue.toLocaleString()}`} 
           icon={ArrowUpRight}
-          color="#10B981"
+          variant="success"
         />
-        <DashboardCard 
+        <StatsCard 
           label="Categories" 
           value={stats.totalCategories} 
           icon={Filter}
-          color="#3B82F6"
+          variant="info"
         />
       </div>
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={selectedPart ? "Edit Part Details" : "Add New Vehicle Part"}
+      >
+        <InventoryForm 
+          initialData={selectedPart}
+          categories={categories}
+          vendors={vendors}
+          onSubmit={handleSubmit}
+          isLoading={submitting}
+        />
+      </Modal>
 
       <div className="bg-white dark:bg-zinc-950 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
         <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -217,12 +287,12 @@ export default function InventoryPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <Link 
-                          href={`/admin/inventory/edit/${part.id}`}
+                        <button 
+                          onClick={() => handleEditPart(part)}
                           className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-orange-500 transition-colors"
                         >
                           <Edit className="w-4 h-4" />
-                        </Link>
+                        </button>
                         <button 
                           onClick={() => handleDelete(part.id)}
                           className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-red-500 transition-colors"
