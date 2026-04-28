@@ -8,8 +8,8 @@ import { Part, ApiResponse } from "@/types";
 
 const addPartsSchema = z.object({
   partId: z.string().min(1, "Please select a part"),
-  quantity: z.coerce.number().min(1, "Quantity must be at least 1"),
-  pricePerUnit: z.coerce.number().min(0.01, "Price must be greater than 0"),
+  quantity: z.number().min(1, "Quantity must be at least 1"),
+  pricePerUnit: z.number().min(0.01, "Price must be greater than 0"),
 });
 
 type AddPartsFormValues = z.infer<typeof addPartsSchema>;
@@ -102,7 +102,7 @@ export default function VendorAddPartsForm({ onSubmit, isLoading }: VendorAddPar
             Quantity *
           </label>
           <input
-            {...register("quantity")}
+            {...register("quantity", { valueAsNumber: true })}
             type="number"
             min="1"
             className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
@@ -115,7 +115,7 @@ export default function VendorAddPartsForm({ onSubmit, isLoading }: VendorAddPar
             Cost Per Unit (Rs.) *
           </label>
           <input
-            {...register("pricePerUnit")}
+            {...register("pricePerUnit", { valueAsNumber: true })}
             type="number"
             step="0.01"
             min="0.01"

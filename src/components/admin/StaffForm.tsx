@@ -11,9 +11,11 @@ const staffSchema = z.object({
   email: z.string().email("Invalid email address"),
   phoneNumber: z.string().min(10, "Phone number must be at least 10 characters"),
   address: z.string().min(5, "Address must be at least 5 characters"),
-  password: z.string().min(6, "Password must be at least 6 characters").optional(),
+  password: z.string().transform(v => v === "" ? undefined : v).optional().refine(v => v === undefined || v.length >= 6, {
+    message: "Password must be at least 6 characters"
+  }),
   passwordVerify: z.string().optional(),
-  isActive: z.boolean().default(true),
+  isActive: z.boolean(),
 }).refine((data) => {
   if (!data.password && !data.passwordVerify) return true;
   return data.password === data.passwordVerify;
@@ -37,14 +39,14 @@ export default function StaffForm({ initialData, onSubmit, isLoading }: StaffFor
     formState: { errors },
   } = useForm<StaffFormValues>({
     resolver: zodResolver(staffSchema),
-    defaultValues: initialData ? {
-      fullName: initialData.fullName,
-      email: initialData.email,
-      phoneNumber: initialData.phoneNumber,
-      address: initialData.address,
-      isActive: initialData.isActive,
-    } : {
-      isActive: true,
+    defaultValues: {
+      fullName: initialData?.fullName || "",
+      email: initialData?.email || "",
+      phoneNumber: initialData?.phoneNumber || "",
+      address: initialData?.address || "",
+      isActive: initialData?.isActive ?? true,
+      password: "",
+      passwordVerify: "",
     },
   });
 

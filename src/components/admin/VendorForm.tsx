@@ -7,9 +7,9 @@ const vendorSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   contactPerson: z.string().optional(),
   email: z.string().email("Invalid email address").optional().or(z.literal("")),
-  phone: z.string().min(10, "Phone number must be at least 10 digits"),
+  phone: z.string().min(10, "Phone number must be at least 10 characters"),
   address: z.string().optional(),
-  openingBalance: z.coerce.number().min(0, "Opening balance cannot be negative"),
+  openingBalance: z.number().min(0, "Opening balance cannot be negative"),
 });
 
 type VendorFormValues = z.infer<typeof vendorSchema>;
@@ -20,7 +20,11 @@ interface VendorFormProps {
   isLoading?: boolean;
 }
 
-export default function VendorForm({ initialData, onSubmit, isLoading }: VendorFormProps) {
+export default function VendorForm({
+  initialData,
+  onSubmit,
+  isLoading,
+}: VendorFormProps) {
   const {
     register,
     handleSubmit,
@@ -49,7 +53,9 @@ export default function VendorForm({ initialData, onSubmit, isLoading }: VendorF
             className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
             placeholder="e.g., Auto Parts Inc."
           />
-          {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
+          {errors.name && (
+            <p className="text-xs text-red-500">{errors.name.message}</p>
+          )}
         </div>
 
         <div className="space-y-1">
@@ -61,7 +67,11 @@ export default function VendorForm({ initialData, onSubmit, isLoading }: VendorF
             className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
             placeholder="e.g., John Doe"
           />
-          {errors.contactPerson && <p className="text-xs text-red-500">{errors.contactPerson.message}</p>}
+          {errors.contactPerson && (
+            <p className="text-xs text-red-500">
+              {errors.contactPerson.message}
+            </p>
+          )}
         </div>
 
         <div className="space-y-1">
@@ -74,7 +84,9 @@ export default function VendorForm({ initialData, onSubmit, isLoading }: VendorF
             className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
             placeholder="contact@autoparts.com"
           />
-          {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
+          {errors.email && (
+            <p className="text-xs text-red-500">{errors.email.message}</p>
+          )}
         </div>
 
         <div className="space-y-1">
@@ -86,7 +98,9 @@ export default function VendorForm({ initialData, onSubmit, isLoading }: VendorF
             className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
             placeholder="+1 234 567 890"
           />
-          {errors.phone && <p className="text-xs text-red-500">{errors.phone.message}</p>}
+          {errors.phone && (
+            <p className="text-xs text-red-500">{errors.phone.message}</p>
+          )}
         </div>
 
         <div className="space-y-1 md:col-span-2">
@@ -98,7 +112,9 @@ export default function VendorForm({ initialData, onSubmit, isLoading }: VendorF
             className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
             placeholder="123 Main St, City"
           />
-          {errors.address && <p className="text-xs text-red-500">{errors.address.message}</p>}
+          {errors.address && (
+            <p className="text-xs text-red-500">{errors.address.message}</p>
+          )}
         </div>
 
         <div className="space-y-1 md:col-span-2">
@@ -106,13 +122,17 @@ export default function VendorForm({ initialData, onSubmit, isLoading }: VendorF
             Opening Balance (Rs.)
           </label>
           <input
-            {...register("openingBalance")}
+            {...register("openingBalance", { valueAsNumber: true })}
             type="number"
             step="0.01"
             className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
             placeholder="0.00"
           />
-          {errors.openingBalance && <p className="text-xs text-red-500">{errors.openingBalance.message}</p>}
+          {errors.openingBalance && (
+            <p className="text-xs text-red-500">
+              {errors.openingBalance.message}
+            </p>
+          )}
         </div>
       </div>
 
@@ -122,7 +142,11 @@ export default function VendorForm({ initialData, onSubmit, isLoading }: VendorF
           disabled={isLoading}
           className="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
         >
-          {isLoading ? "Saving..." : initialData ? "Update Vendor" : "Create Vendor"}
+          {isLoading
+            ? "Saving..."
+            : initialData
+              ? "Update Vendor"
+              : "Create Vendor"}
         </button>
       </div>
     </form>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { Vendor, VendorPayment, ApiResponse } from "@/types";
+import { Vendor, VendorPayment, ApiResponse, VendorPurchaseItem } from "@/types";
 import {
   ArrowLeft,
   PackagePlus,
@@ -168,21 +168,21 @@ export default function VendorDetailsPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatsCard 
           label="Total Due Amount"
-          value={`Rs. ${vendor.dueAmount?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}`}
+          value={`Rs. ${(vendor.dueAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           icon={Wallet}
           variant="danger"
           description="Amount pending to be paid to vendor"
         />
         <StatsCard 
           label="Total Paid"
-          value={`Rs. ${vendor.totalPaid?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}`}
+          value={`Rs. ${(vendor.totalPaid || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           icon={Receipt}
           variant="success"
           description="Total amount paid historically"
         />
         <StatsCard 
           label="Opening Balance"
-          value={`Rs. ${vendor.openingBalance?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}`}
+          value={`Rs. ${(vendor.openingBalance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           icon={Building2}
           variant="default"
           description="Initial balance on vendor creation"
