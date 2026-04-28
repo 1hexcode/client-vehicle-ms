@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Part, PartCategory, Vendor } from "@/types";
-import { Loader2 } from "lucide-react";
+import { FormInput, FormSelect, FormTextarea, SubmitButton } from "@/components/ui/FormElements";
 
 const inventorySchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -57,154 +57,87 @@ export default function InventoryForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Part Name *
-          </label>
-          <input
-            {...register("name")}
-            className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-            placeholder="e.g., Brake Pad - Front"
-          />
-          {errors.name && (
-            <p className="text-xs text-red-500">{errors.name.message}</p>
-          )}
-        </div>
+        <FormInput
+          label="Part Name"
+          required
+          registration={register("name")}
+          error={errors.name?.message}
+          placeholder="e.g., Brake Pad - Front"
+        />
 
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            SKU / Part Number *
-          </label>
-          <input
-            {...register("sku")}
-            className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-            placeholder="e.g., BRK-001"
-          />
-          {errors.sku && (
-            <p className="text-xs text-red-500">{errors.sku.message}</p>
-          )}
-        </div>
+        <FormInput
+          label="SKU / Part Number"
+          required
+          registration={register("sku")}
+          error={errors.sku?.message}
+          placeholder="e.g., BRK-001"
+        />
 
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Category *
-          </label>
-          <select
-            {...register("categoryId")}
-            className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-          >
-            <option value="">Select a category</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
-          {errors.categoryId && (
-            <p className="text-xs text-red-500">{errors.categoryId.message}</p>
-          )}
-        </div>
+        <FormSelect
+          label="Category"
+          required
+          registration={register("categoryId")}
+          error={errors.categoryId?.message}
+          options={categories.map(c => ({ value: c.id, label: c.name }))}
+          placeholder="Select a category"
+        />
 
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Vendor *
-          </label>
-          <select
-            {...register("vendorId")}
-            className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-          >
-            <option value="">Select a vendor</option>
-            {vendors.map((vendor) => (
-              <option key={vendor.id} value={vendor.id}>
-                {vendor.name}
-              </option>
-            ))}
-          </select>
-          {errors.vendorId && (
-            <p className="text-xs text-red-500">{errors.vendorId.message}</p>
-          )}
-        </div>
+        <FormSelect
+          label="Vendor"
+          required
+          registration={register("vendorId")}
+          error={errors.vendorId?.message}
+          options={vendors.map(v => ({ value: v.id, label: v.name }))}
+          placeholder="Select a vendor"
+        />
 
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Reorder Level (Alert at)
-          </label>
-          <input
-            {...register("reorderLevel", { valueAsNumber: true })}
-            type="number"
-            className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-          />
-          {errors.reorderLevel && (
-            <p className="text-xs text-red-500">{errors.reorderLevel.message}</p>
-          )}
-        </div>
+        <FormInput
+          label="Reorder Level (Alert at)"
+          type="number"
+          registration={register("reorderLevel", { valueAsNumber: true })}
+          error={errors.reorderLevel?.message}
+        />
 
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Cost Price (Rs.) *
-          </label>
-          <input
-            {...register("costPrice", { valueAsNumber: true })}
-            type="number"
-            step="0.01"
-            className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-          />
-          {errors.costPrice && (
-            <p className="text-xs text-red-500">{errors.costPrice.message}</p>
-          )}
-        </div>
+        <FormInput
+          label="Cost Price (Rs.)"
+          required
+          type="number"
+          step="0.01"
+          registration={register("costPrice", { valueAsNumber: true })}
+          error={errors.costPrice?.message}
+        />
 
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Unit Price (Selling Rs.) *
-          </label>
-          <input
-            {...register("unitPrice", { valueAsNumber: true })}
-            type="number"
-            step="0.01"
-            className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-          />
-          {errors.unitPrice && (
-            <p className="text-xs text-red-500">{errors.unitPrice.message}</p>
-          )}
-        </div>
+        <FormInput
+          label="Unit Price (Selling Rs.)"
+          required
+          type="number"
+          step="0.01"
+          registration={register("unitPrice", { valueAsNumber: true })}
+          error={errors.unitPrice?.message}
+        />
 
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Initial Stock Quantity
-          </label>
-          <input
-            {...register("stockQuantity", { valueAsNumber: true })}
-            type="number"
-            className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-          />
-          {errors.stockQuantity && (
-            <p className="text-xs text-red-500">{errors.stockQuantity.message}</p>
-          )}
-        </div>
+        <FormInput
+          label="Initial Stock Quantity"
+          type="number"
+          registration={register("stockQuantity", { valueAsNumber: true })}
+          error={errors.stockQuantity?.message}
+        />
 
-        <div className="space-y-1 md:col-span-2">
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Description
-          </label>
-          <textarea
-            {...register("description")}
-            rows={3}
-            className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
+        <div className="md:col-span-2">
+          <FormTextarea
+            label="Description"
+            registration={register("description")}
+            error={errors.description?.message}
             placeholder="Optional details about the part..."
+            rows={3}
           />
         </div>
       </div>
 
       <div className="flex justify-end pt-4">
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="px-8 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-semibold shadow-lg shadow-orange-500/30 transition-all flex items-center gap-2 disabled:opacity-50"
-        >
-          {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
+        <SubmitButton isLoading={isLoading}>
           {initialData ? "Update Part" : "Create Part"}
-        </button>
+        </SubmitButton>
       </div>
     </form>
   );

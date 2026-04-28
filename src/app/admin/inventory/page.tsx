@@ -24,8 +24,18 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 import { StatsCard } from "@/components/ui/StatsCard";
 import Modal from "@/components/ui/Modal";
+import DataTable from "@/components/ui/DataTable";
 import InventoryForm from "@/components/admin/InventoryForm";
+import CategoryForm from "@/components/admin/CategoryForm";
 import { PartCategory, Vendor } from "@/types";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function InventoryPage() {
   const [parts, setParts] = useState<Part[]>([]);
@@ -37,23 +47,33 @@ export default function InventoryPage() {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPart, setSelectedPart] = useState<Part | undefined>();
+  
+  const [isCatModalOpen, setIsCatModalOpen] = useState(false);
+  const [selectedCat, setSelectedCat] = useState<PartCategory | undefined>();
+  const [catSearch, setCatSearch] = useState("");
+
   const [submitting, setSubmitting] = useState(false);
 
   const fetchInitialData = async () => {
     try {
       setLoading(true);
-      const [partsRes, catsRes, vendorsRes]: [ApiResponse<Part[]>, ApiResponse<PartCategory[]>, ApiResponse<Vendor[]>] = await Promise.all([
-        api.get("/api/Parts"),
-        api.get("/api/PartCategories"),
-        api.get("/api/Vendors")
-      ]);
+      
+      const fetchParts = api.get("/api/parts").then(res => {
+        if (res.success) setParts(res.data || []);
+      }).catch(() => toast.error("Failed to load parts"));
 
-      if (partsRes.success) setParts(partsRes.data || []);
-      if (catsRes.success) setCategories(catsRes.data || []);
-      if (vendorsRes.success) setVendors(vendorsRes.data || []);
+      const fetchCats = api.get("/api/part-categories").then(res => {
+        if (res.success) setCategories(res.data || []);
+      }).catch(() => toast.error("Failed to load categories"));
+
+      const fetchVendors = api.get("/api/vendors").then(res => {
+        if (res.success) setVendors(res.data || []);
+      }).catch(() => toast.error("Failed to load vendors"));
+
+      await Promise.allSettled([fetchParts, fetchCats, fetchVendors]);
       
     } catch (error) {
-      toast.error("Failed to fetch data");
+      toast.error("Failed to sync inventory data");
     } finally {
       setLoading(false);
     }
@@ -119,7 +139,7 @@ export default function InventoryPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to disable this part? It will no longer be available for sales.")) return;
     try {
-      const response: ApiResponse<string> = await api.delete(`/api/Parts/${id}`);
+      const response: ApiResponse<string> = await api.delete(`/api/parts/${id}`);
       if (response.success) {
         toast.success("Part disabled");
         fetchInitialData();
@@ -128,6 +148,58 @@ export default function InventoryPage() {
       toast.error("Failed to disable part");
     }
   };
+
+  const handleAddCat = () => {
+    setSelectedCat(undefined);
+    setIsCatModalOpen(true);
+  };
+
+  const handleEditCat = (cat: PartCategory) => {
+    setSelectedCat(cat);
+    setIsCatModalOpen(true);
+  };
+
+  const handleCatSubmit = async (data: any) => {
+    try {
+      setSubmitting(true);
+      if (selectedCat) {
+        const response: ApiResponse<PartCategory> = await api.put(`/api/part-categories/${selectedCat.id}`, data);
+        if (response.success) {
+          toast.success("Category updated");
+          setIsCatModalOpen(false);
+          fetchInitialData();
+        }
+      } else {
+        const response: ApiResponse<PartCategory> = await api.post("/api/part-categories", data);
+        if (response.success) {
+          toast.success("Category created");
+          setIsCatModalOpen(false);
+          fetchInitialData();
+        }
+      }
+    } catch (error) {
+      toast.error("An error occurred");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteCat = async (id: string) => {
+    if (!confirm("Are you sure you want to disable this category?")) return;
+    try {
+      const response: ApiResponse<string> = await api.delete(`/api/part-categories/${id}`);
+      if (response.success) {
+        toast.success("Category disabled");
+        fetchInitialData();
+      }
+    } catch (error) {
+      toast.error("Failed to disable category");
+    }
+  };
+
+  const filteredCats = categories.filter((c) => 
+    c.name.toLowerCase().includes(catSearch.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
@@ -190,130 +262,221 @@ export default function InventoryPage() {
         />
       </Modal>
 
-      <div className="bg-white dark:bg-zinc-950 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-        <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
-            <input
-              type="text"
-              placeholder="Search by name or SKU..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-            />
+        <DataTable
+          columns={[
+            {
+              key: "partDetails",
+              header: "Part Details",
+              render: (part) => (
+                <div className="flex flex-col">
+                  <span className="font-medium text-zinc-900 dark:text-white">{part.name}</span>
+                  <span className="text-xs text-zinc-500 uppercase tracking-wider">{part.sku}</span>
+                </div>
+              ),
+            },
+            {
+              key: "category",
+              header: "Category",
+              render: (part) => (
+                <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                  {part.categoryName || "Uncategorized"}
+                </span>
+              ),
+            },
+            {
+              key: "stockLevel",
+              header: "Stock Level",
+              render: (part) => (
+                <div className="flex items-center gap-2">
+                  <span className={`font-bold ${part.stockQuantity <= part.reorderLevel ? "text-red-500" : "text-zinc-900 dark:text-zinc-100"}`}>
+                    {part.stockQuantity}
+                  </span>
+                  {part.stockQuantity <= part.reorderLevel && (
+                    <div className="group relative">
+                      <AlertTriangle className="w-4 h-4 text-red-500" />
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-red-500 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                        Below reorder level ({part.reorderLevel})
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ),
+            },
+            {
+              key: "pricing",
+              header: "Pricing",
+              render: (part) => (
+                <div className="flex flex-col text-sm">
+                  <span className="text-zinc-900 dark:text-zinc-100">Sell: Rs. {part.unitPrice.toLocaleString()}</span>
+                  <span className="text-xs text-zinc-500 text-[10px]">Cost: Rs. {part.costPrice.toLocaleString()}</span>
+                </div>
+              ),
+            },
+            {
+              key: "status",
+              header: "Status",
+              render: (part) => (
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${part.isActive ? "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-500" : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-500"}`}>
+                  {part.isActive ? "Active" : "Disabled"}
+                </span>
+              ),
+            },
+            {
+              key: "actions",
+              header: "Actions",
+              className: "text-right",
+              render: (part) => (
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => handleEditPart(part)}
+                    className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-orange-500 transition-colors"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(part.id)}
+                    className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-red-500 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  <Link 
+                    href={`/admin/inventory/movements?partId=${part.id}`}
+                    className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-blue-500 transition-colors"
+                  >
+                    <History className="w-4 h-4" />
+                  </Link>
+                </div>
+              ),
+            },
+          ]}
+          data={filteredParts}
+          loading={loading}
+          keyExtractor={(p) => p.id}
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search by name or SKU..."
+          onRefresh={fetchInitialData}
+          emptyIcon={Package}
+          emptyMessage="No parts found matching your criteria."
+          headerActions={
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setFilter("all")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === "all" ? "bg-orange-100 text-orange-600 dark:bg-orange-500/10 dark:text-orange-500" : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900"}`}
+              >
+                All Parts
+              </button>
+              <button 
+                onClick={() => setFilter("low-stock")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${filter === "low-stock" ? "bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-500" : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900"}`}
+              >
+                Low Stock
+                {stats.lowStock > 0 && <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{stats.lowStock}</span>}
+              </button>
+            </div>
+          }
+        />
+      
+      {/* Categories Section */}
+      <div className="pt-8 space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-t border-zinc-200 dark:border-zinc-800 pt-8">
+          <div>
+            <h2 className="text-2xl font-bold text-zinc-900 dark:text-white font-outfit flex items-center gap-3">
+              <Filter className="w-6 h-6 text-orange-600" />
+              Categories Management
+            </h2>
+            <p className="text-zinc-500 dark:text-zinc-400 mt-1">Organize your parts into categories.</p>
           </div>
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={() => setFilter("all")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === "all" ? "bg-orange-100 text-orange-600 dark:bg-orange-500/10 dark:text-orange-500" : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900"}`}
-            >
-              All Parts
-            </button>
-            <button 
-              onClick={() => setFilter("low-stock")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${filter === "low-stock" ? "bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-500" : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900"}`}
-            >
-              Low Stock
-              {stats.lowStock > 0 && <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{stats.lowStock}</span>}
-            </button>
-          </div>
+          <button 
+            onClick={handleAddCat}
+            className="flex items-center gap-2 px-5 py-2.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-900 text-white rounded-xl font-medium shadow-lg transition-all active:scale-95 w-fit"
+          >
+            <Plus className="w-4 h-4" />
+            Add Category
+          </button>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-zinc-50 dark:bg-zinc-900/50 text-left">
-                <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Part Details</th>
-                <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Category</th>
-                <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Stock Level</th>
-                <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Pricing</th>
-                <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-              {loading ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-10 text-center">
-                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-orange-500" />
-                    <p className="text-zinc-500 mt-2">Loading inventory...</p>
-                  </td>
-                </tr>
-              ) : filteredParts.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-10 text-center text-zinc-500">
-                    No parts found matching your criteria.
-                  </td>
-                </tr>
-              ) : (
-                filteredParts.map((part) => (
-                  <tr key={part.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-col">
-                        <span className="font-medium text-zinc-900 dark:text-white">{part.name}</span>
-                        <span className="text-xs text-zinc-500 uppercase tracking-wider">{part.sku}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-                        {part.categoryName || "Uncategorized"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <span className={`font-bold ${part.stockQuantity <= part.reorderLevel ? "text-red-500" : "text-zinc-900 dark:text-zinc-100"}`}>
-                          {part.stockQuantity}
-                        </span>
-                        {part.stockQuantity <= part.reorderLevel && (
-                          <div className="group relative">
-                            <AlertTriangle className="w-4 h-4 text-red-500" />
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-red-500 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                              Below reorder level ({part.reorderLevel})
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-col text-sm">
-                        <span className="text-zinc-900 dark:text-zinc-100">Sell: Rs. {part.unitPrice.toLocaleString()}</span>
-                        <span className="text-xs text-zinc-500 text-[10px]">Cost: Rs. {part.costPrice.toLocaleString()}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${part.isActive ? "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-500" : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-500"}`}>
-                        {part.isActive ? "Active" : "Disabled"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <button 
-                          onClick={() => handleEditPart(part)}
-                          className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-orange-500 transition-colors"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button 
-                          onClick={() => handleDelete(part.id)}
-                          className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-red-500 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                        <Link 
-                          href={`/admin/inventory/movements?partId=${part.id}`}
-                          className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-blue-500 transition-colors"
-                        >
-                          <History className="w-4 h-4" />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          columns={[
+            {
+              key: "name",
+              header: "Category Name",
+              render: (cat) => (
+                <span className="font-semibold text-zinc-900 dark:text-white">{cat.name}</span>
+              ),
+            },
+            {
+              key: "description",
+              header: "Description",
+              render: (cat) => (
+                <span className="text-sm text-zinc-500">{cat.description || "No description"}</span>
+              ),
+            },
+            {
+              key: "status",
+              header: "Status",
+              render: (cat) => (
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${cat.isActive ? "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-500" : "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-500"}`}>
+                  {cat.isActive ? "Active" : "Disabled"}
+                </span>
+              ),
+            },
+            {
+              key: "actions",
+              header: "Actions",
+              className: "text-right",
+              render: (cat) => (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                      <MoreVertical className="w-5 h-5 text-zinc-500" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={() => handleEditCat(cat)}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <Edit className="w-4 h-4 text-blue-500" />
+                      Edit Category
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => handleDeleteCat(cat.id)}
+                      className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Disable Category
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ),
+            },
+          ]}
+          data={filteredCats}
+          loading={loading}
+          keyExtractor={(c) => c.id}
+          searchValue={catSearch}
+          onSearchChange={setCatSearch}
+          searchPlaceholder="Search categories..."
+          onRefresh={fetchInitialData}
+          emptyIcon={Filter}
+          emptyMessage="No categories found."
+        />
       </div>
+
+      <Modal
+        isOpen={isCatModalOpen}
+        onClose={() => setIsCatModalOpen(false)}
+        title={selectedCat ? "Edit Category" : "Add New Category"}
+      >
+        <CategoryForm 
+          initialData={selectedCat}
+          onSubmit={handleCatSubmit}
+          isLoading={submitting}
+        />
+      </Modal>
     </div>
   );
 }

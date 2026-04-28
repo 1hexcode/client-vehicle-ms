@@ -14,7 +14,7 @@ export default function PromoBanners() {
           <Link href="#" className="text-sm text-[#F97316] font-semibold inline-flex items-center gap-1 hover:gap-2 transition-all">Shop Now <ArrowRight size={16} /></Link>
           <Car size={120} className="absolute -bottom-6 -right-6 text-[#1A1A1A] group-hover:text-[#222] transition-colors" />
         </div>
-        <div className="rounded-2xl bg-gradient-to-br from-[#F97316] to-[#EA580C] p-8 flex flex-col justify-center relative overflow-hidden group">
+        <div className="rounded-2xl bg-[#F97316] p-8 flex flex-col justify-center relative overflow-hidden group">
           <span className="text-[10px] font-bold uppercase tracking-widest text-white/70 mb-1">For any Vehicle</span>
           <h3 className="text-xl font-bold font-outfit mb-1 text-white">Buy the Tires</h3>
           <p className="text-sm text-white/80 mb-6">From <span className="text-white font-bold">Rs. 3,999</span></p>

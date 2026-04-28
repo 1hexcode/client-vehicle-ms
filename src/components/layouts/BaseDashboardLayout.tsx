@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import Image from 'next/image';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -56,12 +57,8 @@ export default function BaseDashboardLayout({ children }: { children: React.Reac
       {/* Sidebar */}
       <aside className="w-64 bg-[#0F0F0F] border-r border-[#222] hidden lg:flex flex-col fixed inset-y-0 z-50">
         <div className="p-6">
-          <Link href="/" className="flex items-center gap-2.5 mb-10">
-            <img src="/images/logo.jpeg" alt="Logo" className="w-10 h-10 rounded-lg object-cover" />
-            <div>
-              <span className="text-white font-bold text-lg font-outfit">Vehicle</span>
-              <span className="text-[#F97316] font-bold text-lg font-outfit">MS</span>
-            </div>
+          <Link href="/" className="mb-10 block">
+            <Image src="/images/logo-black.jpeg" alt="Vehiclehub Logo" width={100} height={48} className="h-12 w-auto mx-auto rounded-xl object-contain" priority />
           </Link>
 
           <nav className="space-y-1">
@@ -162,10 +159,9 @@ export default function BaseDashboardLayout({ children }: { children: React.Reac
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />
           <aside className="absolute left-0 top-0 bottom-0 w-72 bg-[#0F0F0F] border-r border-[#222] p-6">
             <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-2">
-                <img src="/images/logo.jpeg" alt="Logo" className="w-8 h-8 rounded-lg object-cover" />
-                <span className="font-bold font-outfit">Vehicle<span className="text-[#F97316]">MS</span></span>
-              </div>
+              <Link href="/" className="block">
+                <Image src="/images/logo-black.jpeg" alt="VehicleMS Logo" width={80} height={40} className="h-10 w-auto rounded-lg object-contain" />
+              </Link>
               <button onClick={() => setIsMobileMenuOpen(false)}><X size={22} className="text-gray-400" /></button>
             </div>
             <nav className="space-y-1">

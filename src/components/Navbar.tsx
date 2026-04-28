@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useAuth } from "@/store/AuthContext";
 import { 
   LogOut, 
@@ -54,14 +55,8 @@ export default function Navbar() {
       <nav className="bg-[#0A0A0A] border-b border-[#222] px-6">
         <div className="max-w-7xl mx-auto h-[72px] flex items-center justify-between gap-6">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            <div className="w-9 h-9 bg-[#F97316] rounded-lg flex items-center justify-center">
-              <span className="text-white font-black text-sm font-outfit">V</span>
-            </div>
-            <div className="leading-none">
-              <span className="text-white font-bold text-lg tracking-tight font-outfit">Vehicle</span>
-              <span className="text-[#F97316] font-bold text-lg font-outfit">MS</span>
-            </div>
+          <Link href="/" className="block shrink-0">
+            <Image src="/images/logo-black.jpeg" alt="VehicleMS Logo" width={100} height={48} className="h-12 w-auto rounded-lg object-contain" priority />
           </Link>
 
           {/* Search Bar */}

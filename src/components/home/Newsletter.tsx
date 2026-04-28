@@ -16,7 +16,7 @@ export default function Newsletter() {
 
   return (
     <section className="max-w-7xl mx-auto px-6 py-16">
-      <div className="bg-gradient-to-r from-[#F97316] to-[#EA580C] rounded-2xl p-10 md:p-14 flex flex-col md:flex-row items-center justify-between gap-8">
+      <div className="bg-[#F97316] rounded-2xl p-10 md:p-14 flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="space-y-2">
           <h3 className="text-2xl md:text-3xl font-bold font-outfit text-white">Subscribe to our Newsletter</h3>
           <p className="text-white/70 text-sm">Get the latest deals and product updates delivered to your inbox.</p>

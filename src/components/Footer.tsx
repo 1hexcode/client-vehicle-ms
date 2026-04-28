@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/image";
+import Image from "next/image";
 import NextLink from "next/link";
 import { MapPin, PhoneCall, Mail, Clock } from "lucide-react";
 import { FaFacebook, FaInstagram, FaTwitter, FaYoutube } from "react-icons/fa";
@@ -11,14 +11,8 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
         {/* Brand */}
         <div className="space-y-6">
-          <NextLink href="/" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 bg-[#F97316] rounded-lg flex items-center justify-center">
-              <span className="text-white font-black text-sm font-outfit">V</span>
-            </div>
-            <div>
-              <span className="text-white font-bold text-lg font-outfit">Vehicle</span>
-              <span className="text-[#F97316] font-bold text-lg font-outfit">MS</span>
-            </div>
+          <NextLink href="/" className="block">
+            <Image src="/images/logo-black.jpeg" alt="VehicleMS Logo" width={80} height={40} className="h-10 w-auto rounded-lg object-contain" />
           </NextLink>
           <p className="text-gray-500 text-sm leading-relaxed">
             The premier destination for vehicle parts selling and inventory management. Quality parts, competitive prices, expert service.

@@ -12,7 +12,7 @@ interface AuthBrandingProps {
 
 export default function AuthBranding({ title, subtitle, description, icon: Icon }: AuthBrandingProps) {
   return (
-    <div className="hidden lg:flex lg:w-[45%] relative overflow-hidden bg-gradient-to-br from-[#F97316] to-[#EA580C]">
+    <div className="hidden lg:flex lg:w-[45%] relative overflow-hidden bg-[#F97316]">
       <div className="relative z-10 flex flex-col justify-between p-14 w-full">
         <Link href="/" className="flex items-center gap-2 text-white/80 hover:text-white transition-colors text-sm font-medium">
           <ArrowLeft size={18} /> Back to Home
