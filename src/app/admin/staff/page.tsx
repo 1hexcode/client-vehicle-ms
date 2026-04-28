@@ -185,6 +185,7 @@ export default function StaffManagementPage() {
                 placeholder="Search by name or email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                suppressHydrationWarning
                 className="w-full pl-12 pr-4 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
               />
             </div>

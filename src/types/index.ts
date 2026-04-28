@@ -32,3 +32,45 @@ export interface ApiResponse<T> {
   data?: T;
   errors?: string[];
 }
+
+export interface Vendor {
+  id: string;
+  name: string;
+  contactPerson?: string;
+  email?: string;
+  phone: string;
+  address?: string;
+  openingBalance: number;
+  dueAmount: number;
+  totalPaid: number;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface VendorPayment {
+  id: string;
+  vendorId: string;
+  amount: number;
+  type: string;
+  attachmentUrl?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface VendorPurchaseItem {
+  id: string;
+  vehiclePartName: string;
+  quantity: number;
+  unitCost: number;
+  lineTotal: number;
+  createdAt: string;
+}
+
+export interface VendorPurchase {
+  id: string;
+  invoiceNumber: string;
+  total: number;
+  status: string;
+  createdAt: string;
+  items: VendorPurchaseItem[];
+}
