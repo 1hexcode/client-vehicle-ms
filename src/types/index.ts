@@ -1,12 +1,24 @@
 export interface Part {
   id: string;
+  categoryId: string;
+  categoryName?: string;
   name: string;
-  category: string;
-  price: number;
-  stock: number;
-  supplierId: string;
+  sku: string;
+  description?: string;
+  costPrice: number;
+  unitPrice: number;
+  stockQuantity: number;
+  reorderLevel: number;
+  isActive: boolean;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
+}
+
+export interface PartCategory {
+  id: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
 }
 
 export interface Supplier {
