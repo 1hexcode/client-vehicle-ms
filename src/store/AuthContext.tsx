@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const register = async (data: any) => {
-    await api.post('/api/Customers', data);
+    await api.post('/api/Customers/register', data);
     await login(data.email, data.password);
   };
 

@@ -15,3 +15,20 @@ export interface Supplier {
   contact: string;
   email: string;
 }
+
+export interface Staff {
+  id: string;
+  email: string;
+  fullName: string;
+  phoneNumber: string;
+  address: string;
+  role: string;
+  isActive: boolean;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data?: T;
+  errors?: string[];
+}
