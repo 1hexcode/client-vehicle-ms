@@ -198,13 +198,13 @@ export default function NotFound() {
 
         {/* CTA Buttons */}
         <div className="cta-row">
-          <Link href="/" className="btn-home" id="go-home-btn">
+          {/* <Link href="/" className="btn-home" id="go-home-btn">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
               <polyline points="9 22 9 12 15 12 15 22" />
             </svg>
-            Take me home
-          </Link>
+           
+          </Link> */}
           <button
             id="go-back-btn"
             onClick={() => window.history.back()}
@@ -228,7 +228,7 @@ export default function NotFound() {
         /* ===== ROOT ===== */
         .not-found-root {
           min-height: 100vh;
-          background: #0A0A0A;
+           background: #000000ff;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -285,28 +285,28 @@ export default function NotFound() {
           100% { transform: translateY(-120vh) scale(0.3); opacity: 0; }
         }
 
-        /* ===== CARD ===== */
-        .card {
-          position: relative;
-          background: linear-gradient(145deg, #141414 0%, #111 50%, #0f0f0f 100%);
-          border: 1px solid #222;
-          border-radius: 24px;
-          padding: 0 0 40px 0;
-          max-width: 680px;
-          width: 100%;
-          box-shadow:
-            0 0 0 1px rgba(249,115,22,0.08),
-            0 40px 80px rgba(0,0,0,0.8),
-            0 0 60px rgba(249,115,22,0.06);
-          opacity: 0;
-          transform: translateY(32px) scale(0.97);
-          transition: opacity 0.7s ease, transform 0.7s ease;
-          overflow: hidden;
-        }
-        .card-visible {
-          opacity: 1;
-          transform: translateY(0) scale(1);
-        }
+        // /* ===== CARD ===== */
+        // .card {
+        //   position: relative;
+        //   background: linear-gradient(145deg, #f34242ff 0%, #111 50%, #0f0f0f 100%);
+        //   border: 1px solid #222;
+        //   border-radius: 24px;
+        //   padding: 0 0 40px 0;
+        //   max-width: 680px;
+        //   width: 100%;
+        //   box-shadow:
+        //     0 0 0 1px rgba(249,115,22,0.08),
+        //     0 40px 80px rgba(0,0,0,0.8),
+        //     0 0 60px rgba(249,115,22,0.06);
+        //   opacity: 0;
+        //   transform: translateY(32px) scale(0.97);
+        //   transition: opacity 0.7s ease, transform 0.7s ease;
+        //   overflow: hidden;
+        // }
+        // .card-visible {
+        //   opacity: 1;
+        //   transform: translateY(0) scale(1);
+        // }
 
         /* ===== TOP BAR ===== */
         .top-bar {
