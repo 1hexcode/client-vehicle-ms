@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Vendor } from "@/types";
+import { FormInput, SubmitButton } from "@/components/ui/FormElements";
 
 const vendorSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -44,110 +45,62 @@ export default function VendorForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Vendor Name *
-          </label>
-          <input
-            {...register("name")}
-            className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-            placeholder="e.g., Auto Parts Inc."
-          />
-          {errors.name && (
-            <p className="text-xs text-red-500">{errors.name.message}</p>
-          )}
-        </div>
+        <FormInput
+          label="Vendor Name"
+          required
+          registration={register("name")}
+          error={errors.name?.message}
+          placeholder="e.g., Auto Parts Inc."
+        />
 
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Contact Person
-          </label>
-          <input
-            {...register("contactPerson")}
-            className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-            placeholder="e.g., John Doe"
-          />
-          {errors.contactPerson && (
-            <p className="text-xs text-red-500">
-              {errors.contactPerson.message}
-            </p>
-          )}
-        </div>
+        <FormInput
+          label="Contact Person"
+          registration={register("contactPerson")}
+          error={errors.contactPerson?.message}
+          placeholder="e.g., John Doe"
+        />
 
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Email
-          </label>
-          <input
-            {...register("email")}
-            type="email"
-            className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-            placeholder="contact@autoparts.com"
-          />
-          {errors.email && (
-            <p className="text-xs text-red-500">{errors.email.message}</p>
-          )}
-        </div>
+        <FormInput
+          label="Email"
+          type="email"
+          registration={register("email")}
+          error={errors.email?.message}
+          placeholder="contact@autoparts.com"
+        />
 
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Phone Number *
-          </label>
-          <input
-            {...register("phone")}
-            className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-            placeholder="+1 234 567 890"
-          />
-          {errors.phone && (
-            <p className="text-xs text-red-500">{errors.phone.message}</p>
-          )}
-        </div>
+        <FormInput
+          label="Phone Number"
+          required
+          registration={register("phone")}
+          error={errors.phone?.message}
+          placeholder="+1 234 567 890"
+        />
 
-        <div className="space-y-1 md:col-span-2">
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Address
-          </label>
-          <input
-            {...register("address")}
-            className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
+        <div className="md:col-span-2">
+          <FormInput
+            label="Address"
+            registration={register("address")}
+            error={errors.address?.message}
             placeholder="123 Main St, City"
           />
-          {errors.address && (
-            <p className="text-xs text-red-500">{errors.address.message}</p>
-          )}
         </div>
 
-        <div className="space-y-1 md:col-span-2">
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Opening Balance (Rs.)
-          </label>
-          <input
-            {...register("openingBalance", { valueAsNumber: true })}
+        <div className="md:col-span-2">
+          <FormInput
+            label="Opening Balance (Rs.)"
             type="number"
             step="0.01"
-            className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
+            registration={register("openingBalance", { valueAsNumber: true })}
+            error={errors.openingBalance?.message}
             placeholder="0.00"
           />
-          {errors.openingBalance && (
-            <p className="text-xs text-red-500">
-              {errors.openingBalance.message}
-            </p>
-          )}
         </div>
       </div>
 
       <div className="flex justify-end pt-4">
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
-        >
-          {isLoading
-            ? "Saving..."
-            : initialData
-              ? "Update Vendor"
-              : "Create Vendor"}
-        </button>
+        <SubmitButton isLoading={isLoading}>
+          {initialData ? "Update Vendor" : "Create Vendor"}
+        </SubmitButton>
       </div>
     </form>
   );

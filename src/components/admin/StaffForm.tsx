@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Staff } from "@/types";
-import { Loader2 } from "lucide-react";
+import { FormInput, FormCheckbox, SubmitButton } from "@/components/ui/FormElements";
 
 const staffSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
@@ -52,93 +52,74 @@ export default function StaffForm({ initialData, onSubmit, isLoading }: StaffFor
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Full Name</label>
-        <input
-          {...register("fullName")}
-          className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-          placeholder="John Doe"
-        />
-        {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName.message}</p>}
-      </div>
+      <FormInput
+        label="Full Name"
+        required
+        registration={register("fullName")}
+        error={errors.fullName?.message}
+        placeholder="John Doe"
+      />
 
-      <div>
-        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Email Address</label>
-        <input
-          {...register("email")}
-          disabled={!!initialData}
-          className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:ring-2 focus:ring-orange-500 outline-none transition-all disabled:opacity-50"
-          placeholder="john@example.com"
-        />
-        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
-      </div>
+      <FormInput
+        label="Email Address"
+        type="email"
+        required
+        disabled={!!initialData}
+        registration={register("email")}
+        error={errors.email?.message}
+        placeholder="john@example.com"
+      />
 
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Phone Number</label>
-          <input
-            {...register("phoneNumber")}
-            className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-            placeholder="98XXXXXXXX"
-          />
-          {errors.phoneNumber && <p className="text-red-500 text-xs mt-1">{errors.phoneNumber.message}</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Address</label>
-          <input
-            {...register("address")}
-            className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-            placeholder="Kathmandu, Nepal"
-          />
-          {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>}
-        </div>
+        <FormInput
+          label="Phone Number"
+          required
+          registration={register("phoneNumber")}
+          error={errors.phoneNumber?.message}
+          placeholder="98XXXXXXXX"
+        />
+        <FormInput
+          label="Address"
+          required
+          registration={register("address")}
+          error={errors.address?.message}
+          placeholder="Kathmandu, Nepal"
+        />
       </div>
 
       {!initialData && (
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Password</label>
-            <input
-              type="password"
-              {...register("password")}
-              className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-            />
-            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Verify Password</label>
-            <input
-              type="password"
-              {...register("passwordVerify")}
-              className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-            />
-            {errors.passwordVerify && <p className="text-red-500 text-xs mt-1">{errors.passwordVerify.message}</p>}
-          </div>
+          <FormInput
+            label="Password"
+            type="password"
+            required
+            registration={register("password")}
+            error={errors.password?.message}
+            placeholder="Min 6 characters"
+          />
+          <FormInput
+            label="Verify Password"
+            type="password"
+            required
+            registration={register("passwordVerify")}
+            error={errors.passwordVerify?.message}
+            placeholder="Confirm password"
+          />
         </div>
       )}
 
       {initialData && (
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            {...register("isActive")}
-            id="isActive"
-            className="w-4 h-4 rounded border-zinc-300 text-orange-600 focus:ring-orange-500"
-          />
-          <label htmlFor="isActive" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Active Account
-          </label>
-        </div>
+        <FormCheckbox
+          label="Active Account"
+          registration={register("isActive")}
+        />
       )}
 
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="w-full py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-semibold shadow-lg shadow-orange-500/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-      >
-        {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
-        {initialData ? "Update Staff" : "Register Staff"}
-      </button>
+      <div className="pt-2">
+        <SubmitButton isLoading={isLoading}>
+          {initialData ? "Update Staff" : "Register Staff"}
+        </SubmitButton>
+      </div>
     </form>
   );
 }

@@ -9,7 +9,7 @@ interface WelcomeBannerProps {
 
 export default function WelcomeBanner({ userName }: WelcomeBannerProps) {
   return (
-    <div className="bg-gradient-to-r from-[#F97316] to-[#EA580C] rounded-2xl p-8 md:p-10 relative overflow-hidden">
+    <div className="bg-[#F97316] rounded-2xl p-8 md:p-10 relative overflow-hidden">
       <div className="relative z-10">
         <h2 className="text-2xl md:text-3xl font-bold font-outfit text-white mb-2">
           Ready to hit the road, {userName?.split(' ')[0]}?
