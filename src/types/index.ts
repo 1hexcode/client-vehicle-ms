@@ -68,6 +68,7 @@ export interface VendorPayment {
   amount: number;
   type: string;
   attachmentUrl?: string;
+  receiptNo?: string;
   notes?: string;
   createdAt: string;
 }
@@ -126,3 +127,34 @@ export interface Appointment {
   assignedStaffName?: string;
   createdAt: string;
 }
+
+export interface SalesInvoiceLine {
+  id: string;
+  partId: string;
+  partName: string;
+  sku: string;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+}
+
+export interface SalesInvoice {
+  id: string;
+  invoiceNumber: string;
+  customerId: string;
+  customerName: string;
+  vehicleId?: string;
+  vehicleNumber?: string;
+  createdByUserId: string;
+  subtotal: number;
+  discount: number;
+  tax: number;
+  total: number;
+  status: string;
+  issuedAt?: string;
+  dueAt?: string;
+  createdAt: string;
+  updatedAt?: string;
+  lines: SalesInvoiceLine[];
+}
+
