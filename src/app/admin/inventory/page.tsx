@@ -27,6 +27,7 @@ import Modal from "@/components/ui/Modal";
 import DataTable from "@/components/ui/DataTable";
 import InventoryForm from "@/components/admin/InventoryForm";
 import Switch from "@/components/ui/Switch";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PartCategory, Vendor } from "@/types";
 import {
   DropdownMenu,
@@ -46,7 +47,9 @@ export default function InventoryPage() {
   const [filter, setFilter] = useState<"all" | "low-stock">("all");
   
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [selectedPart, setSelectedPart] = useState<Part | undefined>();
+  const [partToDelete, setPartToDelete] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const fetchInitialData = async () => {
@@ -131,25 +134,51 @@ export default function InventoryPage() {
     totalCategories: new Set(parts.map(p => p.categoryId)).size,
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to disable this part? It will no longer be available for sales.")) return;
+  const handleDeleteClick = (id: string) => {
+    setPartToDelete(id);
+    setIsConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!partToDelete) return;
     try {
-      const response: ApiResponse<string> = await api.delete(`/api/parts/${id}`);
+      setSubmitting(true);
+      const response: ApiResponse<string> = await api.delete(`/api/parts/${partToDelete}`);
       if (response.success) {
         toast.success("Part disabled");
+        setIsConfirmOpen(false);
         fetchInitialData();
+      } else {
+        toast.error(response.message);
       }
     } catch (error) {
       toast.error("Failed to disable part");
+    } finally {
+      setSubmitting(false);
+      setPartToDelete(null);
     }
   };
 
   const handleTogglePartStatus = async (part: Part) => {
     try {
-      const response = await api.put(`/api/Parts/${part.id}`, { ...part, isActive: !part.isActive });
+      const cleanData = {
+        categoryId: part.categoryId,
+        vendorId: part.vendorId,
+        name: part.name,
+        sku: part.sku,
+        description: part.description,
+        costPrice: part.costPrice,
+        unitPrice: part.unitPrice,
+        stockQuantity: part.stockQuantity,
+        reorderLevel: part.reorderLevel,
+        isActive: !part.isActive
+      };
+      const response = await api.put(`/api/Parts/${part.id}`, cleanData);
       if (response.success) {
         toast.success(`Part ${!part.isActive ? 'enabled' : 'disabled'}`);
         fetchInitialData();
+      } else {
+        toast.error(response.message);
       }
     } catch (error) {
       toast.error("Failed to update part status");
@@ -216,6 +245,17 @@ export default function InventoryPage() {
           isLoading={submitting}
         />
       </Modal>
+
+      <ConfirmDialog
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Disable Part"
+        description="Are you sure you want to disable this part? It will no longer be available for sales or purchase orders."
+        confirmText="Yes, Disable"
+        isLoading={submitting}
+        variant="destructive"
+      />
 
         <DataTable
           columns={[
@@ -295,7 +335,7 @@ export default function InventoryPage() {
                     <Edit className="w-4 h-4" />
                   </button>
                   <button 
-                    onClick={() => handleDelete(part.id)}
+                    onClick={() => handleDeleteClick(part.id)}
                     className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-red-500 transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />

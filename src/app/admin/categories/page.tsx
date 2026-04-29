@@ -9,13 +9,16 @@ import {
   Edit, 
   Trash2, 
   MoreVertical,
-  AlertCircle
+  AlertCircle,
+  Search
 } from "lucide-react";
 import toast from "react-hot-toast";
 import Modal from "@/components/ui/Modal";
 import DataTable from "@/components/ui/DataTable";
 import CategoryForm from "@/components/admin/CategoryForm";
 import Switch from "@/components/ui/Switch";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,7 +34,9 @@ export default function CategoriesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [selectedCat, setSelectedCat] = useState<PartCategory | undefined>();
+  const [catToDelete, setCatToDelete] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const fetchCategories = async () => {
@@ -89,29 +94,47 @@ export default function CategoriesPage() {
 
   const handleToggleStatus = async (cat: PartCategory) => {
     try {
-      const updatedData = { ...cat, isActive: !cat.isActive };
+      const updatedData = { 
+        name: cat.name,
+        description: cat.description,
+        vehicleType: cat.vehicleType,
+        parentId: null, // or cat.parentId if you have it
+        isActive: !cat.isActive 
+      };
       const response: ApiResponse<PartCategory> = await api.put(`/api/part-categories/${cat.id}`, updatedData);
       if (response.success) {
         toast.success(`Category ${!cat.isActive ? 'enabled' : 'disabled'}`);
         fetchCategories();
+      } else {
+        toast.error(response.message);
       }
     } catch (error) {
       toast.error("Failed to update status");
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to permanently delete this category?")) return;
+  const handleDeleteClick = (id: string) => {
+    setCatToDelete(id);
+    setIsConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!catToDelete) return;
     try {
-      const response: ApiResponse<string> = await api.delete(`/api/part-categories/${id}`);
+      setSubmitting(true);
+      const response: ApiResponse<string> = await api.delete(`/api/part-categories/${catToDelete}`);
       if (response.success) {
         toast.success("Category deleted");
+        setIsConfirmOpen(false);
         fetchCategories();
       } else {
         toast.error(response.message || "Failed to delete category");
       }
     } catch (error) {
       toast.error("An error occurred during deletion");
+    } finally {
+      setSubmitting(false);
+      setCatToDelete(null);
     }
   };
 
@@ -199,7 +222,7 @@ export default function CategoriesPage() {
                     Edit Details
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    onClick={() => handleDelete(cat.id)}
+                    onClick={() => handleDeleteClick(cat.id)}
                     className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -233,6 +256,17 @@ export default function CategoriesPage() {
         />
       </Modal>
 
+      <ConfirmDialog
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Category"
+        description="Are you sure you want to delete this category? This action cannot be undone if no parts are linked to it."
+        confirmText="Yes, Delete"
+        isLoading={submitting}
+        variant="destructive"
+      />
+
       {loading && categories.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800">
           <div className="relative">
@@ -248,6 +282,4 @@ export default function CategoriesPage() {
   );
 }
 
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(" ");
-}
+

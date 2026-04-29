@@ -16,6 +16,7 @@ const inventorySchema = z.object({
   unitPrice: z.number().min(0, "Unit price cannot be negative"),
   stockQuantity: z.number().int().min(0, "Stock cannot be negative"),
   reorderLevel: z.number().int().min(0, "Reorder level cannot be negative"),
+  isActive: z.boolean(),
 });
 
 type InventoryFormValues = z.infer<typeof inventorySchema>;
@@ -51,6 +52,7 @@ export default function InventoryForm({
       unitPrice: initialData?.unitPrice || 0,
       stockQuantity: initialData?.stockQuantity || 0,
       reorderLevel: initialData?.reorderLevel || 10,
+      isActive: initialData?.isActive ?? true,
     },
   });
 
@@ -132,6 +134,17 @@ export default function InventoryForm({
             rows={3}
           />
         </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          {...register("isActive")}
+          className="w-4 h-4 rounded border-zinc-300 text-orange-600 focus:ring-orange-500"
+        />
+        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          Active Status
+        </label>
       </div>
 
       <div className="flex justify-end pt-4">

@@ -9,6 +9,7 @@ import { FormInput, FormTextarea, FormCheckbox, SubmitButton } from "@/component
 const categorySchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   description: z.string().optional(),
+  vehicleType: z.string().min(1, "Please select a vehicle type"),
   isActive: z.boolean(),
 });
 
@@ -34,19 +35,37 @@ export default function CategoryForm({
     defaultValues: {
       name: initialData?.name || "",
       description: initialData?.description || "",
+      vehicleType: initialData?.vehicleType || "Car",
       isActive: initialData?.isActive ?? true,
     },
   });
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <FormInput
-        label="Category Name"
-        required
-        registration={register("name")}
-        error={errors.name?.message}
-        placeholder="e.g., Engine Parts"
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormInput
+          label="Category Name"
+          required
+          registration={register("name")}
+          error={errors.name?.message}
+          placeholder="e.g., Engine Parts"
+        />
+
+        <FormSelect
+          label="Vehicle Type"
+          required
+          registration={register("vehicleType")}
+          error={errors.vehicleType?.message}
+          options={[
+            { value: "Bike", label: "Bike" },
+            { value: "Car", label: "Car" },
+            { value: "Bus", label: "Bus" },
+            { value: "Auto", label: "Auto" },
+            { value: "Truck", label: "Truck" },
+            { value: "Jeep", label: "Jeep" },
+          ]}
+        />
+      </div>
 
       <FormTextarea
         label="Description"
@@ -56,12 +75,16 @@ export default function CategoryForm({
         rows={3}
       />
 
-      {initialData && (
-        <FormCheckbox
-          label="Active Status"
-          registration={register("isActive")}
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          {...register("isActive")}
+          className="w-4 h-4 rounded border-zinc-300 text-orange-600 focus:ring-orange-500"
         />
-      )}
+        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          Active Status
+        </label>
+      </div>
 
       <div className="flex justify-end pt-4">
         <SubmitButton isLoading={isLoading}>

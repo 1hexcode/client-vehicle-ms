@@ -20,6 +20,7 @@ export interface PartCategory {
   id: string;
   name: string;
   description?: string;
+  vehicleType: string;
   isActive: boolean;
 }
 
