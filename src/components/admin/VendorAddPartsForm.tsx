@@ -65,9 +65,9 @@ export default function VendorAddPartsForm({ onSubmit, isLoading }: VendorAddPar
   useEffect(() => {
     if (selectedPartId) {
       const part = parts.find((p) => p.id === selectedPartId);
-      if (part && part.price) {
+      if (part && part.unitPrice) {
         // Use existing price as default suggestion
-        setValue("pricePerUnit", part.price);
+        setValue("pricePerUnit", part.unitPrice);
       }
     }
   }, [selectedPartId, parts, setValue]);
@@ -86,7 +86,7 @@ export default function VendorAddPartsForm({ onSubmit, isLoading }: VendorAddPar
           <option value="">{loadingParts ? "Loading parts..." : "Select a part"}</option>
           {parts.map((part) => (
             <option key={part.id} value={part.id}>
-              {part.name} ({part.category || "Uncategorized"})
+              {part.name} ({part.categoryName || "Uncategorized"})
             </option>
           ))}
         </select>
