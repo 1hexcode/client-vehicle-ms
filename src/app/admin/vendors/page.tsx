@@ -20,6 +20,7 @@ import {
 import toast from "react-hot-toast";
 import Modal from "@/components/ui/Modal";
 import VendorForm from "@/components/admin/VendorForm";
+import Switch from "@/components/ui/Switch";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { StatsCard } from "@/components/ui/StatsCard";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import DataTable from "@/components/ui/DataTable";
 import Link from "next/link";
 
 export default function VendorsManagementPage() {
@@ -45,7 +47,7 @@ export default function VendorsManagementPage() {
   const fetchVendors = async () => {
     try {
       setLoading(true);
-      const response: ApiResponse<Vendor[]> = await api.get("/api/Vendors");
+      const response: ApiResponse<Vendor[]> = await api.get("/api/vendors");
       if (response.success) {
         setVendors(response.data || []);
       } else {
@@ -83,7 +85,7 @@ export default function VendorsManagementPage() {
     try {
       setSubmitting(true);
       const response: ApiResponse<string> = await api.delete(
-        `/api/Vendors/${vendorToDelete}`,
+        `/api/vendors/${vendorToDelete}`,
       );
       if (response.success) {
         toast.success("Vendor account disabled");
@@ -100,13 +102,27 @@ export default function VendorsManagementPage() {
     }
   };
 
+  const handleToggleStatus = async (vendor: Vendor) => {
+    try {
+      const response: ApiResponse<any> = await api.put(`/api/vendors/${vendor.id}`, { ...vendor, isActive: !vendor.isActive });
+      if (response.success) {
+        toast.success(`Vendor ${!vendor.isActive ? 'enabled' : 'disabled'}`);
+        fetchVendors();
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update status");
+    }
+  };
+
   const handleSubmit = async (data: any) => {
     try {
       setSubmitting(true);
       if (selectedVendor) {
         // Exclude openingBalance from update if backend doesn't expect it, but we can send it since dto might ignore it or allow it
         const response: ApiResponse<any> = await api.put(
-          `/api/Vendors/${selectedVendor.id}`,
+          `/api/vendors/${selectedVendor.id}`,
           data,
         );
         if (response.success) {
@@ -117,7 +133,7 @@ export default function VendorsManagementPage() {
           toast.error(response.message);
         }
       } else {
-        const response: ApiResponse<any> = await api.post("/api/Vendors", data);
+        const response: ApiResponse<any> = await api.post("/api/vendors", data);
         if (response.success) {
           toast.success("New vendor registered");
           setIsModalOpen(false);
@@ -185,167 +201,122 @@ export default function VendorsManagementPage() {
           />
         </div>
 
-        <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-xl overflow-hidden">
-          <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex flex-col md:flex-row gap-4 items-center justify-between bg-zinc-50/50 dark:bg-zinc-900/50">
-            <div className="relative w-full md:w-96">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
-              <input
-                type="text"
-                placeholder="Search by name, email or phone..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                suppressHydrationWarning
-                className="w-full pl-12 pr-4 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-              />
-            </div>
-            <button
-              onClick={fetchVendors}
-              className="p-3 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
-              title="Refresh List"
-            >
-              <RefreshCw
-                className={`w-5 h-5 ${loading ? "animate-spin" : ""}`}
-              />
-            </button>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-zinc-50 dark:bg-zinc-950/50">
-                  <th className="px-6 py-4 font-semibold text-zinc-600 dark:text-zinc-400 text-sm">
-                    Vendor
-                  </th>
-                  <th className="px-6 py-4 font-semibold text-zinc-600 dark:text-zinc-400 text-sm">
-                    Contact
-                  </th>
-                  <th className="px-6 py-4 font-semibold text-zinc-600 dark:text-zinc-400 text-sm">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 font-semibold text-zinc-600 dark:text-zinc-400 text-sm">
-                    Due Amount
-                  </th>
-                  <th className="px-6 py-4 font-semibold text-zinc-600 dark:text-zinc-400 text-sm text-right">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                {loading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <tr key={i} className="animate-pulse">
-                      <td
-                        colSpan={5}
-                        className="px-6 py-8 h-16 bg-zinc-50/20 dark:bg-zinc-800/20"
-                      ></td>
-                    </tr>
-                  ))
-                ) : filteredVendors.length > 0 ? (
-                  filteredVendors.map((vendor) => (
-                    <tr
-                      key={vendor.id}
-                      className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors group"
+        <DataTable
+          columns={[
+            {
+              key: "vendor",
+              header: "Vendor",
+              render: (vendor) => (
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#F97316] flex items-center justify-center text-white font-bold">
+                    {vendor.name.charAt(0)}
+                  </div>
+                  <div>
+                    <Link
+                      href={`/admin/vendors/${vendor.id}`}
+                      className="font-semibold text-zinc-900 dark:text-white hover:text-orange-500 transition-colors"
                     >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold">
-                            {vendor.name.charAt(0)}
-                          </div>
-                          <div>
-                            <Link
-                              href={`/admin/vendors/${vendor.id}`}
-                              className="font-semibold text-zinc-900 dark:text-white hover:text-orange-500 transition-colors"
-                            >
-                              {vendor.name}
-                            </Link>
-                            <p className="text-xs text-zinc-500">
-                              {vendor.contactPerson || "No contact person"}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        <p className="text-zinc-900 dark:text-zinc-300">
-                          {vendor.phone}
-                        </p>
-                        {vendor.email && (
-                          <p className="text-zinc-500">{vendor.email}</p>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
-                            vendor.isActive
-                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                              : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                          }`}
-                        >
-                          {vendor.isActive ? (
-                            <CheckCircle2 className="w-3 h-3" />
-                          ) : (
-                            <XCircle className="w-3 h-3" />
-                          )}
-                          {vendor.isActive ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm font-semibold text-red-500">
-                        Rs. {(vendor.dueAmount || 0).toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-                              <MoreVertical className="w-5 h-5 text-zinc-500" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem asChild>
-                              <Link
-                                href={`/admin/vendors/${vendor.id}`}
-                                className="flex items-center gap-2 cursor-pointer text-zinc-700 dark:text-zinc-300"
-                              >
-                                <Search className="w-4 h-4 text-blue-500" />
-                                View Details
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleEditVendor(vendor)}
-                              className="flex items-center gap-2 cursor-pointer"
-                            >
-                              <Edit className="w-4 h-4 text-blue-500" />
-                              Edit Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleDeleteClick(vendor.id)}
-                              className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                              Disable Account
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className="px-6 py-20 text-center text-zinc-500"
+                      {vendor.name}
+                    </Link>
+                    <p className="text-xs text-zinc-500">
+                      {vendor.contactPerson || "No contact person"}
+                    </p>
+                  </div>
+                </div>
+              ),
+            },
+            {
+              key: "contact",
+              header: "Contact",
+              render: (vendor) => (
+                <div className="text-sm">
+                  <p className="text-zinc-900 dark:text-zinc-300">
+                    {vendor.phone}
+                  </p>
+                  {vendor.email && (
+                    <p className="text-zinc-500">{vendor.email}</p>
+                  )}
+                </div>
+              ),
+            },
+              {
+                key: "status",
+                header: "Status",
+                render: (vendor) => (
+                  <div className="flex items-center gap-3">
+                    <Switch 
+                      checked={vendor.isActive} 
+                      onChange={() => handleToggleStatus(vendor)}
+                    />
+                    <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                      vendor.isActive ? "text-green-500" : "text-zinc-500"
+                    }`}>
+                      {vendor.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                ),
+              },
+            {
+              key: "dueAmount",
+              header: "Due Amount",
+              render: (vendor) => (
+                <span className="text-sm font-semibold text-red-500">
+                  Rs. {(vendor.dueAmount || 0).toLocaleString()}
+                </span>
+              ),
+            },
+            {
+              key: "actions",
+              header: "Actions",
+              className: "text-right",
+              render: (vendor) => (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                      <MoreVertical className="w-5 h-5 text-zinc-500" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link
+                        href={`/admin/vendors/${vendor.id}`}
+                        className="flex items-center gap-2 cursor-pointer text-zinc-700 dark:text-zinc-300"
+                      >
+                        <Search className="w-4 h-4 text-blue-500" />
+                        View Details
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleEditVendor(vendor)}
+                      className="flex items-center gap-2 cursor-pointer"
                     >
-                      <div className="flex flex-col items-center gap-2">
-                        <Store className="w-12 h-12 text-zinc-200" />
-                        <p>No vendors found matching your search.</p>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                      <Edit className="w-4 h-4 text-blue-500" />
+                      Edit Details
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleDeleteClick(vendor.id)}
+                      className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Disable Account
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ),
+            },
+          ]}
+          data={filteredVendors}
+          loading={loading}
+          keyExtractor={(v) => v.id}
+          searchValue={searchTerm}
+          onSearchChange={setSearchTerm}
+          searchPlaceholder="Search by name, email or phone..."
+          onRefresh={fetchVendors}
+          emptyIcon={Store}
+          emptyMessage="No vendors found matching your search."
+        />
       </div>
 
       <Modal

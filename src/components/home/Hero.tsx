@@ -21,7 +21,7 @@ export default function Hero({ dashboardHref }: HeroProps) {
             className="object-cover group-hover:scale-105 transition-transform duration-700"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
+          <div className="absolute inset-0 bg-black/60" />
           <div className="relative z-10 h-full flex flex-col justify-center px-10 md:px-14 py-10">
             <span className="inline-flex items-center gap-2 bg-[#F97316] text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full w-fit mb-5 animate-pulse-glow">
               <Zap size={12} /> New Arrivals
@@ -50,7 +50,7 @@ export default function Hero({ dashboardHref }: HeroProps) {
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-700"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+            <div className="absolute inset-0 bg-black/50" />
             <div className="relative z-10 h-full flex flex-col justify-end p-8">
               <span className="text-[10px] font-bold uppercase tracking-widest text-[#F97316] mb-2">Find Parts</span>
               <h3 className="text-xl font-bold font-outfit mb-3">For Your Vehicle</h3>

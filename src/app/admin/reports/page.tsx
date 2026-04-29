@@ -44,7 +44,7 @@ export default function ReportsPage() {
       const fromStr = from.toISOString();
       const toStr = new Date().toISOString();
 
-      const response: ApiResponse<FinancialReport> = await api.get(`/api/Reports/financial?from=${fromStr}&to=${toStr}`);
+      const response: ApiResponse<FinancialReport> = await api.get(`/api/reports/financial?from=${fromStr}&to=${toStr}`);
       if (response.success && response.data) {
         setReport(response.data);
       }

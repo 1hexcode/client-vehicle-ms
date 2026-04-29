@@ -5,6 +5,9 @@ import PageWrapper from "@/components/PageWrapper";
 export const metadata: Metadata = {
   title: "Vehicle Parts MS | Premium Inventory Management",
   description: "Advanced management system for vehicle parts, inventory, and suppliers.",
+  icons: {
+    icon: "/images/logo-web.jpeg",
+  },
 };
 
 export default function RootLayout({
@@ -13,8 +16,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <PageWrapper>
           {children}
         </PageWrapper>
