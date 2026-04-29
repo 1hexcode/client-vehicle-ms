@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { PartCategory } from "@/types";
-import { FormInput, FormTextarea, FormCheckbox, SubmitButton } from "@/components/ui/FormElements";
+import { FormInput, FormTextarea, FormCheckbox, SubmitButton, FormSelect } from "@/components/ui/FormElements";
 
 const categorySchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
