@@ -1,10 +1,12 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { FormInput, FormSelect, FormTextarea, SubmitButton } from "@/components/ui/FormElements";
 
 const paymentSchema = z.object({
   amount: z.number().min(0.01, "Amount must be greater than 0"),
   type: z.enum(["Cash", "Card", "Online"]),
+  receiptNo: z.string().optional(),
   attachmentUrl: z.string().optional(),
   notes: z.string().optional(),
 });
@@ -30,66 +32,54 @@ export default function VendorPaymentForm({ onSubmit, isLoading }: VendorPayment
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-          Payment Amount (Rs.) *
-        </label>
-        <input
-          {...register("amount", { valueAsNumber: true })}
-          type="number"
-          step="0.01"
-          className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-          placeholder="0.00"
-        />
-        {errors.amount && <p className="text-xs text-red-500">{errors.amount.message}</p>}
-      </div>
+      <FormInput
+        label="Payment Amount (Rs.)"
+        required
+        type="number"
+        step="0.01"
+        registration={register("amount", { valueAsNumber: true })}
+        error={errors.amount?.message}
+        placeholder="0.00"
+      />
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-          Payment Type *
-        </label>
-        <select
-          {...register("type")}
-          className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-        >
-          <option value="Cash">Cash</option>
-          <option value="Card">Card</option>
-          <option value="Online">Online</option>
-        </select>
-        {errors.type && <p className="text-xs text-red-500">{errors.type.message}</p>}
-      </div>
+      <FormSelect
+        label="Payment Type"
+        required
+        registration={register("type")}
+        error={errors.type?.message}
+        options={[
+          { value: "Cash", label: "Cash" },
+          { value: "Card", label: "Card" },
+          { value: "Online", label: "Online" },
+        ]}
+      />
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-          Attachment URL (Optional)
-        </label>
-        <input
-          {...register("attachmentUrl")}
-          className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-          placeholder="https://..."
-        />
-      </div>
+      <FormInput
+        label="Receipt Number (Optional)"
+        registration={register("receiptNo")}
+        error={errors.receiptNo?.message}
+        placeholder="e.g. REC-12345"
+      />
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-          Notes
-        </label>
-        <textarea
-          {...register("notes")}
-          rows={3}
-          className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-          placeholder="Payment details or remarks..."
-        />
-      </div>
+      <FormInput
+        label="Attachment URL (Optional)"
+        registration={register("attachmentUrl")}
+        error={errors.attachmentUrl?.message}
+        placeholder="https://..."
+      />
+
+      <FormTextarea
+        label="Notes"
+        registration={register("notes")}
+        error={errors.notes?.message}
+        rows={3}
+        placeholder="Payment details or remarks..."
+      />
 
       <div className="flex justify-end pt-4">
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
-        >
-          {isLoading ? "Processing..." : "Submit Payment"}
-        </button>
+        <SubmitButton isLoading={isLoading}>
+          Submit Payment
+        </SubmitButton>
       </div>
     </form>
   );

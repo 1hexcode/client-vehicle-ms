@@ -89,3 +89,40 @@ export interface VendorPurchase {
   createdAt: string;
   items: VendorPurchaseItem[];
 }
+
+export interface User {
+  id: string;
+  email: string;
+  fullName: string;
+  phoneNumber: string;
+  address: string;
+  role: string;
+  isActive: boolean;
+}
+
+export interface Vehicle {
+  id: string;
+  customerId: string;
+  vehicleNumber: string;
+  type: string;
+  make?: string;
+  model?: string;
+  year?: number;
+  color?: string;
+}
+
+export interface Appointment {
+  id: string;
+  customerId: string;
+  customerName: string;
+  vehicleId: string;
+  vehicleNumber: string;
+  serviceType: string;
+  requestedAt: string;
+  confirmedAt?: string;
+  status: string;
+  notes?: string;
+  assignedStaffUserId?: string;
+  assignedStaffName?: string;
+  createdAt: string;
+}
