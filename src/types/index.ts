@@ -68,6 +68,7 @@ export interface VendorPayment {
   amount: number;
   type: string;
   attachmentUrl?: string;
+  receiptNo?: string;
   notes?: string;
   createdAt: string;
 }
@@ -89,3 +90,71 @@ export interface VendorPurchase {
   createdAt: string;
   items: VendorPurchaseItem[];
 }
+
+export interface User {
+  id: string;
+  email: string;
+  fullName: string;
+  phoneNumber: string;
+  address: string;
+  role: string;
+  isActive: boolean;
+}
+
+export interface Vehicle {
+  id: string;
+  customerId: string;
+  vehicleNumber: string;
+  type: string;
+  make?: string;
+  model?: string;
+  year?: number;
+  color?: string;
+}
+
+export interface Appointment {
+  id: string;
+  customerId: string;
+  customerName: string;
+  vehicleId: string;
+  vehicleNumber: string;
+  serviceType: string;
+  requestedAt: string;
+  confirmedAt?: string;
+  status: string;
+  notes?: string;
+  assignedStaffUserId?: string;
+  assignedStaffName?: string;
+  createdAt: string;
+}
+
+export interface SalesInvoiceLine {
+  id: string;
+  partId: string;
+  partName: string;
+  sku: string;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+}
+
+export interface SalesInvoice {
+  id: string;
+  invoiceNumber: string;
+  customerId: string;
+  customerName: string;
+  vehicleId?: string;
+  vehicleNumber?: string;
+  createdByUserId: string;
+  subtotal: number;
+  discount: number;
+  tax: number;
+  total: number;
+  status: string;
+  issuedAt?: string;
+  dueAt?: string;
+  createdAt: string;
+  updatedAt?: string;
+  lines: SalesInvoiceLine[];
+}
+

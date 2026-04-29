@@ -46,10 +46,12 @@ const NAVIGATION: Record<string, NavLink[]> = {
   Staff: [
     { name: "Dashboard", href: "/staff/dashboard", icon: LayoutDashboard },
     { name: "Point of Sale", href: "/staff/pos", icon: ShoppingCart },
+    { name: "Sales History", href: "/staff/sales", icon: History },
     { name: "Inventory", href: "/staff/inventory", icon: Package },
     { name: "Appointments", href: "/staff/appointments", icon: Calendar },
     { name: "Customers", href: "/staff/customers", icon: UsersIcon },
   ],
+
   Customer: [
     { name: "Dashboard", href: "/customer/dashboard", icon: LayoutDashboard },
     { name: "My Vehicles", href: "/customer/vehicles", icon: Car },

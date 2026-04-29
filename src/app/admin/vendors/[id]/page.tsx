@@ -285,10 +285,11 @@ export default function VendorDetailsPage() {
                 <tr className="bg-zinc-50 dark:bg-zinc-950/50">
                   {activeTab === "payments" ? (
                     <>
-                      <th className="px-6 py-4 font-semibold text-zinc-600 dark:text-zinc-400 text-xs uppercase tracking-wider">Date</th>
-                      <th className="px-6 py-4 font-semibold text-zinc-600 dark:text-zinc-400 text-xs uppercase tracking-wider">Type</th>
-                      <th className="px-6 py-4 font-semibold text-zinc-600 dark:text-zinc-400 text-xs uppercase tracking-wider">Amount</th>
-                      <th className="px-6 py-4 font-semibold text-zinc-600 dark:text-zinc-400 text-xs uppercase tracking-wider">Notes/Ref</th>
+                      <th className="px-6 py-4 font-semibold text-zinc-600 dark:text-zinc-400 text-xs text-left uppercase tracking-wider">Date</th>
+                      <th className="px-6 py-4 font-semibold text-zinc-600 dark:text-zinc-400 text-xs text-left uppercase tracking-wider">Method</th>
+                      <th className="px-6 py-4 font-semibold text-zinc-600 dark:text-zinc-400 text-xs text-left uppercase tracking-wider">Receipt No</th>
+                      <th className="px-6 py-4 font-semibold text-zinc-600 dark:text-zinc-400 text-xs text-left uppercase tracking-wider">Amount</th>
+                      <th className="px-6 py-4 font-semibold text-zinc-600 dark:text-zinc-400 text-xs text-left uppercase tracking-wider">Notes/Ref</th>
                     </>
                   ) : (
                     <>
@@ -315,6 +316,9 @@ export default function VendorDetailsPage() {
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
                             {payment.type}
                           </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-zinc-600 dark:text-zinc-400">
+                          {payment.receiptNo || "-"}
                         </td>
                         <td className="px-6 py-4 text-sm font-bold text-green-600 dark:text-green-500">
                           Rs. {payment.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
