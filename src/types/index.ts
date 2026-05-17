@@ -91,6 +91,39 @@ export interface VendorPurchase {
   items: VendorPurchaseItem[];
 }
 
+export interface PurchaseInvoiceItem {
+  id?: string;
+  vehiclePartId: string;
+  vehiclePartName?: string;
+  quantity: number;
+  unitCost: number;
+  lineTotal?: number;
+}
+
+export interface PurchaseInvoice {
+  id: string;
+  invoiceNumber?: string;
+  vendorId: string;
+  vendorName?: string;
+  receivedAt: string;
+  tax: number;
+  subtotal?: number;
+  total: number;
+  notes?: string;
+  status?: string;
+  createdAt: string;
+  items: PurchaseInvoiceItem[];
+}
+
+export interface MeProfile {
+  id: string;
+  email: string;
+  fullName: string;
+  phoneNumber: string;
+  address: string;
+  role: string;
+}
+
 export interface User {
   id: string;
   email: string;

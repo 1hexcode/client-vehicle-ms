@@ -4,13 +4,19 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Staff } from "@/types";
-import { FormInput, FormCheckbox, SubmitButton } from "@/components/ui/FormElements";
+import { FormInput, FormSelect, FormCheckbox, SubmitButton } from "@/components/ui/FormElements";
+
+const STAFF_ROLE_OPTIONS = [
+  { value: "Staff", label: "Staff" },
+  { value: "Admin", label: "Admin" },
+];
 
 const staffSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   phoneNumber: z.string().min(10, "Phone number must be at least 10 characters"),
   address: z.string().min(5, "Address must be at least 5 characters"),
+  role: z.enum(["Staff", "Admin"], { message: "Select a role" }),
   password: z.string().transform(v => v === "" ? undefined : v).optional().refine(v => v === undefined || v.length >= 6, {
     message: "Password must be at least 6 characters"
   }),
@@ -44,6 +50,7 @@ export default function StaffForm({ initialData, onSubmit, isLoading }: StaffFor
       email: initialData?.email || "",
       phoneNumber: initialData?.phoneNumber || "",
       address: initialData?.address || "",
+      role: (initialData?.role as "Staff" | "Admin") || "Staff",
       isActive: initialData?.isActive ?? true,
       password: "",
       passwordVerify: "",
@@ -86,6 +93,14 @@ export default function StaffForm({ initialData, onSubmit, isLoading }: StaffFor
           placeholder="Kathmandu, Nepal"
         />
       </div>
+
+      <FormSelect
+        label="Role"
+        required
+        registration={register("role")}
+        error={errors.role?.message}
+        options={STAFF_ROLE_OPTIONS}
+      />
 
       {!initialData && (
         <div className="grid grid-cols-2 gap-4">

@@ -6,8 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAuth } from '@/store/AuthContext';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Loader2, ArrowLeft } from 'lucide-react';
-import { api } from '@/lib/api';
 
 import toast from 'react-hot-toast';
 
@@ -18,7 +18,6 @@ const registerSchema = z.object({
   address: z.string().min(5, 'Address is required'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   passwordVerify: z.string(),
-  vehicleNumber: z.string().min(1, 'Vehicle number is required'),
 }).refine((data) => data.password === data.passwordVerify, {
   message: "Passwords don't match",
   path: ["passwordVerify"],
@@ -29,6 +28,7 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 export default function RegisterForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { register: registerAction } = useAuth();
+  const router = useRouter();
 
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -36,17 +36,11 @@ export default function RegisterForm() {
 
   const onSubmit = async (data: RegisterFormData) => {
     setIsSubmitting(true);
-    const toastId = toast.loading('Initializing registry protocol...');
+    const toastId = toast.loading('Creating your account...');
     try {
-      const { vehicleNumber, ...userData } = data;
-      await registerAction(userData);
-      try {
-        await api.post('/api/Vehicles', { vehicleNumber, type: 'Car' });
-        toast.success('Account verified and vehicle registered!', { id: toastId });
-      } catch (vErr) {
-        toast.success('Account verified!', { id: toastId });
-        console.error('User registered but vehicle failed:', vErr);
-      }
+      await registerAction(data);
+      toast.success('Account created! Please sign in to continue.', { id: toastId });
+      router.push('/auth/login');
     } catch (err: any) {
       toast.error(err.message || 'Registration failed.', { id: toastId });
       setIsSubmitting(false);
@@ -88,16 +82,10 @@ export default function RegisterForm() {
             {errors.phoneNumber && <p className="text-red-400 text-xs">{errors.phoneNumber.message}</p>}
           </div>
 
-          <div className="space-y-2">
+          <div className="md:col-span-2 space-y-2">
             <label className="text-sm font-medium text-gray-300">Address</label>
             <input {...register('address')} className={inputClass} placeholder="Kathmandu, Nepal" />
             {errors.address && <p className="text-red-400 text-xs">{errors.address.message}</p>}
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">Vehicle Number</label>
-            <input {...register('vehicleNumber')} className={inputClass} placeholder="BA 1 PA 1234" />
-            {errors.vehicleNumber && <p className="text-red-400 text-xs">{errors.vehicleNumber.message}</p>}
           </div>
 
           <div className="space-y-2">

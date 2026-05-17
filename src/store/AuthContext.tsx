@@ -90,8 +90,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const register = async (data: any) => {
-    await api.post('/api/Customers/register', data);
-    await login(data.email, data.password);
+    const response = await api.post('/api/auth/register', data);
+    if (!response.success) {
+      throw new Error(response.message || 'Registration failed');
+    }
   };
 
   const logout = () => {
