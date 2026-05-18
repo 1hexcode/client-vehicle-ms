@@ -88,9 +88,9 @@ export default function ProductGrid() {
               <StarRating count={product.rating} />
               <div className="flex items-center gap-2 pt-1">
                 {product.oldPrice && (
-                  <span className="text-xs text-gray-500 line-through">${product.oldPrice}</span>
+                  <span className="text-xs text-gray-500 line-through">Rs.{product.oldPrice}</span>
                 )}
-                <span className="text-base font-bold text-white">${product.price}</span>
+                <span className="text-base font-bold text-white">Rs.{product.price}</span>
               </div>
               <span className={`text-[10px] font-semibold ${product.inStock ? "text-green-500" : "text-red-400"}`}>
                 {product.inStock ? "● In Stock" : "● Out of Stock"}
