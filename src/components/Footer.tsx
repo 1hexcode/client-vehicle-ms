@@ -60,7 +60,7 @@ export default function Footer() {
             </li>
             <li className="flex items-center gap-3">
               <Mail size={16} className="text-[#F97316] shrink-0" />
-              <span>support@vehiclems.com</span>
+              <span>support@vehiclehub.com</span>
             </li>
             <li className="flex items-center gap-3">
               <Clock size={16} className="text-[#F97316] shrink-0" />
@@ -73,7 +73,7 @@ export default function Footer() {
       {/* Bottom bar */}
       <div className="border-t border-[#222]">
         <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
-          <p>© 2026 VehicleMS — Vehicle Parts Selling & Inventory Management System. All rights reserved.</p>
+          <p>© 2026 Vehicle Hub — Vehicle Parts Selling & Inventory Management System. All rights reserved.</p>
           <div className="flex gap-6">
             <span className="font-semibold text-gray-400">Visa</span>
             <span className="font-semibold text-gray-400">Mastercard</span>

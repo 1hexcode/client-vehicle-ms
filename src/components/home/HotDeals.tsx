@@ -49,8 +49,8 @@ export default function HotDeals() {
               <h4 className="font-bold truncate">{deal.name}</h4>
               <StarRating count={deal.rating} />
               <div className="flex items-center gap-3 pt-1">
-                <span className="text-sm text-gray-500 line-through">${deal.oldPrice}</span>
-                <span className="text-xl font-bold text-[#F97316]">${deal.price}</span>
+                <span className="text-sm text-gray-500 line-through">Rs.{deal.oldPrice}</span>
+                <span className="text-xl font-bold text-[#F97316]">Rs.{deal.price}</span>
               </div>
               <button 
                 onClick={() => toast.success(`${deal.name} added to cart!`)}
