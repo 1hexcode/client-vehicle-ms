@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { Vendor, PartCategory, ApiResponse } from '@/types';
@@ -55,7 +55,7 @@ async function uploadToCloudinary(file: File): Promise<string> {
 const inputCls = 'w-full bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 placeholder-zinc-400';
 
 
-export default function StockInPage() {
+function StockInContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preVendorId = searchParams.get('vendorId') || '';
@@ -602,5 +602,17 @@ export default function StockInPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function StockInPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+      </div>
+    }>
+      <StockInContent />
+    </Suspense>
   );
 }
