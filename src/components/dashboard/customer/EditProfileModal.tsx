@@ -24,8 +24,8 @@ export default function EditProfileModal({ isOpen, onClose, onSuccess }: EditPro
     e.preventDefault();
     setLoading(true);
     try {
-      // Assuming PUT /api/Users/{id} or /api/me is the endpoint
-      await api.put(`/api/Users/${user.id}`, formData);
+      // The API endpoint for customer updates is typically /api/Customers/{id} based on the role separation
+      await api.put(`/api/Customers/${user.id}`, formData);
       await refreshUser();
       onSuccess();
       onClose();

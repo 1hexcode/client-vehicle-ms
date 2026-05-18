@@ -154,7 +154,7 @@ export default function ProfilePage() {
                     <p className="text-zinc-500 text-xs mb-0.5">Account Status</p>
                     <p className="text-zinc-200 flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                      {user.isActive ? 'Active' : 'Inactive'}
+                      {/* {user.isActive ? 'Active' : 'Inactive'} */}
                     </p>
                   </div>
                 </div>
