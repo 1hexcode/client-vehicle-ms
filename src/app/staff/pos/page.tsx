@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { api } from "@/lib/api";
-import { Part, User, Vehicle, ApiResponse } from "@/types";
+import { Part, User, Vehicle, ApiResponse, SalesInvoiceDto } from "@/types";
 import {
   Search,
   ShoppingCart,
@@ -15,8 +15,10 @@ import {
   Receipt,
   CheckCircle2,
   Loader2,
+  FileText,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { ReceiptPreview } from "@/components/staff/ReceiptPreview";
 
 interface CartItem extends Part {
   cartQuantity: number;
@@ -35,7 +37,16 @@ export default function StaffPOSPage() {
   
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>("");
-  const [tax, setTax] = useState<number>(0);
+  const [taxRate, setTaxRate] = useState<number>(0);
+  const [serviceCharge, setServiceCharge] = useState<number>(0);
+  const [discountRate, setDiscountRate] = useState<number>(0);
+  
+  const [shouldDownloadReceipt, setShouldDownloadReceipt] = useState(true);
+  const [showReceiptPreview, setShowReceiptPreview] = useState(false);
+  const [lastInvoice, setLastInvoice] = useState<SalesInvoiceDto | null>(null);
+
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -59,6 +70,17 @@ export default function StaffPOSPage() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest(".customer-select-container")) {
+        setShowCustomerDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const filteredParts = useMemo(() => {
     if (!searchQuery) return parts;
     const lowerQuery = searchQuery.toLowerCase();
@@ -66,6 +88,19 @@ export default function StaffPOSPage() {
       p => p.name.toLowerCase().includes(lowerQuery) || p.sku.toLowerCase().includes(lowerQuery)
     );
   }, [parts, searchQuery]);
+
+  const filteredCustomers = useMemo(() => {
+    if (!customerSearch) return customers;
+    const lower = customerSearch.toLowerCase();
+    return customers.filter(c => 
+      c.fullName.toLowerCase().includes(lower) || 
+      c.phoneNumber.toLowerCase().includes(lower)
+    );
+  }, [customers, customerSearch]);
+
+  const selectedCustomer = useMemo(() => {
+    return customers.find(c => c.id === selectedCustomerId);
+  }, [customers, selectedCustomerId]);
 
   const customerVehicles = useMemo(() => {
     if (!selectedCustomerId) return [];
@@ -115,7 +150,9 @@ export default function StaffPOSPage() {
     return cart.reduce((acc, item) => acc + item.unitPrice * item.cartQuantity, 0);
   }, [cart]);
 
-  const total = subtotal + tax;
+  const discountAmount = subtotal * (discountRate / 100);
+  const taxAmount = (subtotal + serviceCharge) * (taxRate / 100);
+  const total = subtotal - discountAmount + serviceCharge + taxAmount;
 
   const handleCheckout = async () => {
     if (!selectedCustomerId) {
@@ -130,7 +167,9 @@ export default function StaffPOSPage() {
     const payload = {
       customerId: selectedCustomerId,
       vehicleId: selectedVehicleId || null,
-      tax: tax,
+      taxRate: taxRate,
+      discountRate: discountRate,
+      serviceCharge: serviceCharge,
       lines: cart.map(item => ({
         partId: item.id,
         quantity: item.cartQuantity,
@@ -143,10 +182,17 @@ export default function StaffPOSPage() {
       const res: ApiResponse<any> = await api.post("/api/sales-invoices", payload);
       if (res.success) {
         toast.success("Invoice created successfully");
+        if (shouldDownloadReceipt && res.data) {
+          setLastInvoice(res.data);
+          setShowReceiptPreview(true);
+        }
         setCart([]);
         setSelectedCustomerId("");
         setSelectedVehicleId("");
-        setTax(0);
+        setTaxRate(0);
+        setServiceCharge(0);
+        setDiscountRate(0);
+        setCustomerSearch("");
         // Refresh parts to get updated stock
         const partsRes: ApiResponse<Part[]> = await api.get("/api/Parts");
         if (partsRes.success) setParts((partsRes.data || []).filter(p => p.isActive && p.stockQuantity > 0));
@@ -234,24 +280,68 @@ export default function StaffPOSPage() {
             Current Sale
           </div>
           
-          <div className="space-y-3">
+          <div className="space-y-3 customer-select-container">
             <div>
               <label className="text-xs font-semibold text-zinc-500 flex items-center gap-1.5 mb-1.5">
                 <UserIcon className="w-3.5 h-3.5" /> Customer *
               </label>
-              <select
-                value={selectedCustomerId}
-                onChange={(e) => {
-                  setSelectedCustomerId(e.target.value);
-                  setSelectedVehicleId(""); // reset vehicle when customer changes
-                }}
-                className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500"
-              >
-                <option value="">Select Customer</option>
-                {customers.map(c => (
-                  <option key={c.id} value={c.id}>{c.fullName} ({c.phoneNumber})</option>
-                ))}
-              </select>
+              <div className="relative">
+                <div className="relative">
+                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                  <input
+                    type="text"
+                    placeholder="Search customer..."
+                    value={selectedCustomer ? selectedCustomer.fullName : customerSearch}
+                    onChange={(e) => {
+                      if (selectedCustomerId) {
+                        setSelectedCustomerId("");
+                        setSelectedVehicleId("");
+                      }
+                      setCustomerSearch(e.target.value);
+                      setShowCustomerDropdown(true);
+                    }}
+                    onFocus={() => setShowCustomerDropdown(true)}
+                    className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg pl-9 pr-10 py-2 text-sm focus:outline-none focus:border-orange-500"
+                  />
+                  {(customerSearch || selectedCustomerId) && (
+                    <button
+                      onClick={() => {
+                        setSelectedCustomerId("");
+                        setSelectedVehicleId("");
+                        setCustomerSearch("");
+                        setShowCustomerDropdown(false);
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+                    >
+                      <Plus className="w-4 h-4 rotate-45" />
+                    </button>
+                  )}
+                </div>
+
+                {showCustomerDropdown && !selectedCustomerId && (
+                  <div className="absolute z-10 w-full mt-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                    {filteredCustomers.length === 0 ? (
+                      <div className="p-3 text-sm text-zinc-500 text-center">No customers found</div>
+                    ) : (
+                      filteredCustomers.map(c => (
+                        <div
+                          key={c.id}
+                          onClick={() => {
+                            setSelectedCustomerId(c.id);
+                            setSelectedVehicleId("");
+                            setCustomerSearch(c.fullName);
+                            setShowCustomerDropdown(false);
+                          }}
+                          className="px-4 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer text-sm"
+                        >
+                          <p className="font-medium text-zinc-900 dark:text-white">{c.fullName}</p>
+                          <p className="text-xs text-zinc-500">{c.phoneNumber}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             {selectedCustomerId && customerVehicles.length > 0 && (
@@ -338,16 +428,46 @@ export default function StaffPOSPage() {
               <span className="font-medium text-zinc-900 dark:text-white">Rs. {subtotal.toLocaleString()}</span>
             </div>
             <div className="flex justify-between items-center text-sm text-zinc-600 dark:text-zinc-400">
-              <span>Tax Amount</span>
+              <span>Tax Amount (%)</span>
+              <div className="flex items-center gap-1">
+                <input 
+                  type="number" 
+                  min="0"
+                  max="100"
+                  value={taxRate}
+                  onChange={(e) => setTaxRate(Number(e.target.value) || 0)}
+                  className="w-16 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded px-2 py-1 text-right focus:outline-none focus:border-orange-500 text-zinc-900 dark:text-white"
+                />
+                <span className="text-zinc-500">%</span>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center text-sm text-zinc-600 dark:text-zinc-400">
+              <span>Service Charge</span>
               <div className="flex items-center gap-1">
                 <span className="text-zinc-500">Rs.</span>
                 <input 
                   type="number" 
                   min="0"
-                  value={tax}
-                  onChange={(e) => setTax(Number(e.target.value) || 0)}
+                  value={serviceCharge}
+                  onChange={(e) => setServiceCharge(Number(e.target.value) || 0)}
                   className="w-20 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded px-2 py-1 text-right focus:outline-none focus:border-orange-500 text-zinc-900 dark:text-white"
                 />
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center text-sm text-zinc-600 dark:text-zinc-400">
+              <span>Discount (%)</span>
+              <div className="flex items-center gap-1">
+                <input 
+                  type="number" 
+                  min="0"
+                  max="100"
+                  value={discountRate}
+                  onChange={(e) => setDiscountRate(Number(e.target.value) || 0)}
+                  className="w-16 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded px-2 py-1 text-right focus:outline-none focus:border-orange-500 text-zinc-900 dark:text-white"
+                />
+                <span className="text-zinc-500">%</span>
               </div>
             </div>
             
@@ -356,6 +476,17 @@ export default function StaffPOSPage() {
               <span className="font-bold text-orange-600 text-xl">Rs. {total.toLocaleString()}</span>
             </div>
           </div>
+
+          <label className="flex items-center gap-2 mb-4 cursor-pointer text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
+            <input 
+              type="checkbox" 
+              checked={shouldDownloadReceipt}
+              onChange={(e) => setShouldDownloadReceipt(e.target.checked)}
+              className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-orange-600 focus:ring-orange-500 bg-zinc-50 dark:bg-zinc-900"
+            />
+            <FileText className="w-4 h-4" />
+            Show & Print Receipt after Sale
+          </label>
 
           <button
             onClick={handleCheckout}
@@ -374,6 +505,11 @@ export default function StaffPOSPage() {
         </div>
       </div>
 
+      <ReceiptPreview 
+        isOpen={showReceiptPreview} 
+        onClose={() => setShowReceiptPreview(false)} 
+        invoice={lastInvoice} 
+      />
     </div>
   );
 }

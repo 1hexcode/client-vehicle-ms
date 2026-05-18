@@ -8,18 +8,10 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
-  size?: "sm" | "md" | "lg" | "xl" | "2xl";
+  maxWidth?: string;
 }
 
-const SIZE_CLASS: Record<NonNullable<ModalProps["size"]>, string> = {
-  sm: "max-w-md",
-  md: "max-w-lg",
-  lg: "max-w-2xl",
-  xl: "max-w-3xl",
-  "2xl": "max-w-5xl",
-};
-
-export default function Modal({ isOpen, onClose, title, children, size = "md" }: ModalProps) {
+export default function Modal({ isOpen, onClose, title, children, maxWidth = "max-w-lg" }: ModalProps) {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -38,7 +30,7 @@ export default function Modal({ isOpen, onClose, title, children, size = "md" }:
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className={`bg-white dark:bg-zinc-900 w-full ${SIZE_CLASS[size]} max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-800 animate-in zoom-in-95 duration-200`}>
+      <div className={`bg-white dark:bg-zinc-900 w-full ${maxWidth} rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden animate-in zoom-in-95 duration-200`}>
         <div className="flex items-center justify-between p-6 border-b border-zinc-100 dark:border-zinc-800">
           <h3 className="text-xl font-semibold text-zinc-900 dark:text-white">{title}</h3>
           <button
