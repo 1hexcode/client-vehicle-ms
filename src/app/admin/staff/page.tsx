@@ -102,7 +102,10 @@ export default function StaffManagementPage() {
 
   const handleToggleStatus = async (member: Staff) => {
     try {
-      const response: ApiResponse<any> = await api.put(`/api/Staff/${member.id}`, { ...member, isActive: !member.isActive });
+      const response: ApiResponse<any> = await api.patch(
+        `/api/Users/${member.id}/status`,
+        { isActive: !member.isActive }
+      );
       if (response.success) {
         toast.success(`Account ${!member.isActive ? 'activated' : 'deactivated'}`);
         fetchStaff();
@@ -118,7 +121,13 @@ export default function StaffManagementPage() {
     try {
       setSubmitting(true);
       if (selectedStaff) {
-        const response: ApiResponse<any> = await api.put(`/api/Staff/${selectedStaff.id}`, data);
+        const payload = {
+          fullName: data.fullName,
+          phoneNumber: data.phoneNumber,
+          address: data.address,
+          isActive: data.isActive,
+        };
+        const response: ApiResponse<any> = await api.put(`/api/Staff/${selectedStaff.id}`, payload);
         if (response.success) {
           toast.success("Staff details updated");
           setIsModalOpen(false);
@@ -127,7 +136,15 @@ export default function StaffManagementPage() {
           toast.error(response.message);
         }
       } else {
-        const response: ApiResponse<any> = await api.post("/api/Staff", data);
+        const payload = {
+          fullName: data.fullName,
+          email: data.email,
+          phoneNumber: data.phoneNumber,
+          address: data.address,
+          password: data.password,
+          passwordVerify: data.passwordVerify,
+        };
+        const response: ApiResponse<any> = await api.post("/api/Staff", payload);
         if (response.success) {
           toast.success("New staff registered");
           setIsModalOpen(false);
@@ -204,19 +221,31 @@ export default function StaffManagementPage() {
                     </div>
                     <div>
                       <p className="font-semibold text-zinc-900 dark:text-white">{member.fullName}</p>
-                      <p className="text-xs text-zinc-500">{member.role}</p>
+                      <p className="text-xs text-zinc-500">{member.email}</p>
                     </div>
                   </div>
                 ),
               },
               {
-                key: "contact",
-                header: "Contact",
+                key: "role",
+                header: "Role",
                 render: (member) => (
-                  <div className="text-sm">
-                    <p className="text-zinc-900 dark:text-zinc-300">{member.email}</p>
-                    <p className="text-zinc-500">{member.phoneNumber}</p>
-                  </div>
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                      member.role === "Admin"
+                        ? "bg-orange-500/10 text-orange-500 border-orange-500/20"
+                        : "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                    }`}
+                  >
+                    {member.role}
+                  </span>
+                ),
+              },
+              {
+                key: "contact",
+                header: "Phone",
+                render: (member) => (
+                  <span className="text-sm text-zinc-700 dark:text-zinc-300">{member.phoneNumber}</span>
                 ),
               },
               {

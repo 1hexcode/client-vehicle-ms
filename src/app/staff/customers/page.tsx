@@ -69,8 +69,7 @@ export default function StaffCustomersPage() {
     if (!targetCustomer) return;
     try {
       setSubmitting(true);
-      // Use Customers endpoint to toggle — we'll call Staff update for now
-      const res: ApiResponse<any> = await api.put(`/api/Users/${targetCustomer.id}/status`, { isActive: false });
+      const res: ApiResponse<any> = await api.patch(`/api/Users/${targetCustomer.id}/status`, { isActive: false });
       if (res.success) {
         toast.success("Customer disabled");
         setIsDisableOpen(false);
@@ -90,7 +89,7 @@ export default function StaffCustomersPage() {
     if (!targetCustomer) return;
     try {
       setSubmitting(true);
-      const res: ApiResponse<any> = await api.put(`/api/Users/${targetCustomer.id}/status`, { isActive: true });
+      const res: ApiResponse<any> = await api.patch(`/api/Users/${targetCustomer.id}/status`, { isActive: true });
       if (res.success) {
         toast.success("Customer activated");
         setIsActivateOpen(false);
