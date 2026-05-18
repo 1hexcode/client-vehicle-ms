@@ -13,7 +13,8 @@ import {
   History,
   Download,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  Printer
 } from "lucide-react";
 import toast from "react-hot-toast";
 import DataTable from "@/components/ui/DataTable";
@@ -296,8 +297,8 @@ export default function StaffSalesHistoryPage() {
                 onClick={() => window.print()}
                 className="flex items-center gap-2 px-6 py-3 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl font-bold hover:opacity-90 transition-all active:scale-95"
               >
-                <Download className="w-5 h-5" />
-                Download PDF
+                <Printer className="w-5 h-5" />
+                Print
               </button>
             </div>
 

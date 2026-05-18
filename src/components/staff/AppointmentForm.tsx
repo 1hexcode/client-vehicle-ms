@@ -53,7 +53,7 @@ export default function AppointmentForm({
         label="Customer" required
         registration={register("customerId")}
         error={errors.customerId?.message}
-        options={customers.map((c) => ({ value: c.id, label: `${c.fullName} — ${c.phoneNumber}` }))}
+        options={customers.map((c) => ({ value: c.id, label: `${c.fullName} - ${c.phoneNumber}` }))}
         placeholder="Select a customer"
       />
 
@@ -63,7 +63,7 @@ export default function AppointmentForm({
         error={errors.vehicleId?.message}
         options={customerVehicles.map((v) => ({
           value: v.id,
-          label: `${v.vehicleNumber}${v.make ? ` — ${v.make} ${v.model || ""}` : ""}`,
+          label: `${v.vehicleNumber}${v.make ? ` - ${v.make} ${v.model || ""}` : ""}`,
         }))}
         placeholder={selectedCustomerId ? "Select vehicle" : "Select customer first"}
         disabled={!selectedCustomerId || customerVehicles.length === 0}

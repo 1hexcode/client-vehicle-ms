@@ -24,6 +24,7 @@ export function ReceiptPreview({ isOpen, onClose, invoice }: ReceiptPreviewProps
     const printWindow = window.open(windowUrl, windowName, 'left=50000,top=50000,width=0,height=0');
     
     if (printWindow) {
+      const logoUrl = `${window.location.origin}/images/logo-black.jpeg`;
       printWindow.document.write(`
         <html>
           <head>
@@ -31,7 +32,8 @@ export function ReceiptPreview({ isOpen, onClose, invoice }: ReceiptPreviewProps
             <style>
               body { font-family: 'Inter', sans-serif; padding: 40px; color: #18181b; }
               .header { text-align: center; margin-bottom: 30px; }
-              .company-name { font-size: 24px; font-weight: bold; color: #ea580c; margin-bottom: 5px; }
+              .logo { height: 60px; width: auto; object-fit: contain; margin-bottom: 6px; }
+              .tagline { font-size: 13px; color: #71717a; }
               .invoice-info { display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 14px; }
               table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
               th { border-bottom: 2px solid #e4e4e7; text-align: left; padding: 10px; font-size: 13px; color: #71717a; }
@@ -44,8 +46,8 @@ export function ReceiptPreview({ isOpen, onClose, invoice }: ReceiptPreviewProps
           </head>
           <body>
             <div class="header">
-              <div class="company-name">Vehicle Parts MS</div>
-              <div>Point of Sale Receipt</div>
+              <img src="${logoUrl}" class="logo" alt="Logo" />
+              <div class="tagline">Official Sales Receipt</div>
             </div>
             <div class="invoice-info">
               <div>
@@ -122,8 +124,9 @@ export function ReceiptPreview({ isOpen, onClose, invoice }: ReceiptPreviewProps
         <div ref={receiptRef} className="bg-white dark:bg-zinc-950 p-8 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm mb-6">
           <div className="flex justify-between items-start mb-8">
             <div>
-              <h2 className="text-2xl font-bold text-orange-600">Vehicle Parts MS</h2>
-              <p className="text-sm text-zinc-500">Official Sales Receipt</p>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/images/logo-black.jpeg" alt="Logo" className="h-12 w-auto object-contain" />
+              <p className="text-sm text-zinc-500 mt-1">Official Sales Receipt</p>
             </div>
             <div className="text-right">
               <p className="font-mono text-sm text-zinc-900 dark:text-white">#{invoice.invoiceNumber}</p>

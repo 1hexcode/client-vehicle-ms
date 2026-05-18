@@ -220,7 +220,7 @@ export default function NotFound() {
         {/* Error code badge */}
         <div className="error-badge">
           <span className="error-badge-dot" />
-          ERROR CODE: 404 — PAGE NOT FOUND
+          ERROR CODE: 404 - PAGE NOT FOUND
         </div>
       </div>
 

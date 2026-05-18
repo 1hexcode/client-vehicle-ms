@@ -197,4 +197,27 @@ export interface SalesInvoice {
 export type SalesInvoiceDto = SalesInvoice;
 export type SalesInvoiceLineDto = SalesInvoiceLine;
 
+export interface PartRequest {
+  id: string;
+  customerId: string;
+  customerName: string;
+  vehicleId: string;
+  vehicleNumber: string;
+  description: string;
+  status: string; // Pending | Processing | Fulfilled | Rejected
+  handledByUserId?: string;
+  handledByName?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
 
+export interface Review {
+  id: string;
+  customerId: string;
+  customerName: string;
+  appointmentId?: string;
+  salesInvoiceId?: string;
+  rating: number;
+  comment?: string;
+  createdAt: string;
+}

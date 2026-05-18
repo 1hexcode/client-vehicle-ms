@@ -30,7 +30,7 @@ export default function Hero({ dashboardHref }: HeroProps) {
               Get All Original<br />Parts for Your Car
             </h1>
             <p className="text-gray-300 text-sm md:text-base max-w-md mb-8 leading-relaxed animate-slide-up stagger-1">
-              Starting from <span className="text-[#F97316] font-bold text-xl">Rs. 899</span> — Premium OEM & aftermarket parts for every make and model.
+              Starting from <span className="text-[#F97316] font-bold text-xl">Rs. 899</span> - Premium OEM & aftermarket parts for every make and model.
             </p>
             <Link
               href={dashboardHref}
