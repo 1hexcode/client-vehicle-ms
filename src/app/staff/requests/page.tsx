@@ -147,32 +147,33 @@ export default function StaffPartRequestsPage() {
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuLabel>Update Status</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {row.status === 'Pending' && (
-              <DropdownMenuItem
-                onClick={() => { setTargetId(row.id); setConfirmAction('Processing'); }}
-                className="flex items-center gap-2 cursor-pointer text-blue-600 focus:text-blue-600 focus:bg-blue-50 dark:focus:bg-blue-900/20"
-              >
-                <Package className="w-4 h-4" /> Mark Processing
-              </DropdownMenuItem>
-            )}
-            {(row.status === 'Pending' || row.status === 'Processing') && (
+            {(row.status === 'Pending' || row.status === 'Processing') ? (
               <>
                 <DropdownMenuItem
                   onClick={() => { setTargetId(row.id); setConfirmAction('Fulfilled'); }}
-                  className="flex items-center gap-2 cursor-pointer text-green-600 focus:text-green-600 focus:bg-green-50 dark:focus:bg-green-900/20"
+                  className="flex items-center gap-2 cursor-pointer text-green-600 focus:text-green-600 focus:bg-green-50 dark:focus:bg-green-900/20 font-medium"
                 >
-                  <CheckCircle2 className="w-4 h-4" /> Mark Fulfilled
+                  <CheckCircle2 className="w-4 h-4" /> Accept
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => { setTargetId(row.id); setConfirmAction('Rejected'); }}
-                  className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
+                  className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20 font-medium"
                 >
-                  <XCircle className="w-4 h-4" /> Reject Request
+                  <XCircle className="w-4 h-4" /> Reject
                 </DropdownMenuItem>
+                {row.status === 'Pending' && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => { setTargetId(row.id); setConfirmAction('Processing'); }}
+                      className="flex items-center gap-2 cursor-pointer text-blue-600 focus:text-blue-600 focus:bg-blue-50 dark:focus:bg-blue-900/20"
+                    >
+                      <Package className="w-4 h-4" /> Mark Processing
+                    </DropdownMenuItem>
+                  </>
+                )}
               </>
-            )}
-            {(row.status === 'Fulfilled' || row.status === 'Rejected') && (
+            ) : (
               <DropdownMenuItem disabled className="text-zinc-400 text-xs">
                 No further actions
               </DropdownMenuItem>
@@ -258,9 +259,9 @@ export default function StaffPartRequestsPage() {
         isOpen={!!confirmAction && confirmAction === 'Fulfilled'}
         onClose={() => { setConfirmAction(null); setTargetId(null); }}
         onConfirm={handleStatusUpdate}
-        title="Mark as Fulfilled"
-        description="Confirm that this part request has been fulfilled and the customer has received their parts?"
-        confirmText="Yes, Fulfilled"
+        title="Accept Part Request"
+        description="Confirm that you want to accept this part request and mark it as fulfilled?"
+        confirmText="Yes, Accept"
         isLoading={submitting}
         variant="info"
       />

@@ -6,7 +6,7 @@ import { api } from '@/lib/api';
 import { Vendor, PartCategory, ApiResponse } from '@/types';
 import {
   ArrowLeft, Plus, Trash2, Paperclip, Package,
-  ChevronDown, Upload, X,
+  ChevronDown, ChevronUp, ChevronRight, Upload, X,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -53,7 +53,7 @@ async function uploadToCloudinary(file: File): Promise<string> {
 }
 
 const inputCls = 'w-full bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 placeholder-zinc-400';
-const cellInputCls = 'w-full bg-transparent border border-zinc-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-orange-500';
+
 
 export default function StockInPage() {
   const router = useRouter();
@@ -73,7 +73,12 @@ export default function StockInPage() {
   const [uploading, setUploading] = useState(false);
   const [lines, setLines] = useState<LineItem[]>([mkLine()]);
   const [submitting, setSubmitting] = useState(false);
+  const [collapsedItems, setCollapsedItems] = useState<Record<string, boolean>>({});
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const toggleItem = (id: string) => {
+    setCollapsedItems(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   useEffect(() => {
     api.get('/api/vendors').then((r: any) => setVendors(r.data || [])).catch(() => {});
@@ -320,174 +325,225 @@ export default function StockInPage() {
 
         {/* Item Details */}
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">
+          <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
             <h2 className="text-base font-bold text-zinc-800 dark:text-white flex items-center gap-2">
               <span className="w-7 h-7 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
                 <Package className="w-4 h-4 text-orange-600" />
               </span>
               Item Details
             </h2>
+            <span className="text-xs text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded-full">
+              {lines.length} item{lines.length !== 1 ? 's' : ''}
+            </span>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-zinc-50 dark:bg-zinc-950/50">
-                <tr>
-                  {['#', 'PART NAME', 'CATEGORY', 'SKU', 'UNIT', 'COST PRICE', 'REORDER LVL', 'SELLING PRICE', 'QTY', 'DISC (%)', 'TAX % (VAT)', 'AMOUNT', 'STATUS', 'ACTION'].map((h, i) => (
-                    <th key={i} className={`px-2 py-3 text-[10px] font-bold text-zinc-500 uppercase tracking-wider whitespace-nowrap ${i === 0 ? 'pl-5 w-8' : ''} ${i === 13 ? 'pr-5 text-center' : 'text-left'}`}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                {lines.map((line, idx) => (
-                  <tr key={line.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
-                    <td className="pl-5 py-3 text-sm text-zinc-400 w-8">{idx + 1}</td>
-
-                    {/* Part Name */}
-                    <td className="px-2 py-3 min-w-[160px]">
-                      <input
-                        value={line.partName}
-                        onChange={e => updateLine(line.id, 'partName', e.target.value)}
-                        placeholder="Enter part name"
-                        className={cellInputCls}
-                      />
-                    </td>
-
-                    {/* Category */}
-                    <td className="px-2 py-3 min-w-[140px]">
-                      <select
-                        value={line.categoryId}
-                        onChange={e => updateLine(line.id, 'categoryId', e.target.value)}
-                        className={cellInputCls + ' appearance-none'}
-                      >
-                        <option value="">Select category</option>
-                        {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                      </select>
-                    </td>
-
-                    {/* SKU */}
-                    <td className="px-2 py-3 w-24">
-                      <input
-                        value={line.sku}
-                        onChange={e => updateLine(line.id, 'sku', e.target.value)}
-                        placeholder="SKU"
-                        className={cellInputCls}
-                      />
-                    </td>
-
-                    {/* Unit */}
-                    <td className="px-2 py-3 w-20">
-                      <input
-                        value={line.unit}
-                        onChange={e => updateLine(line.id, 'unit', e.target.value)}
-                        className={cellInputCls}
-                      />
-                    </td>
-
-                    {/* Cost Price */}
-                    <td className="px-2 py-3 w-28">
-                      <input
-                        type="number" min="0" step="0.01"
-                        value={line.costPrice}
-                        onChange={e => updateLine(line.id, 'costPrice', parseFloat(e.target.value) || 0)}
-                        className={cellInputCls + ' text-right'}
-                      />
-                    </td>
-
-                    {/* Reorder Level */}
-                    <td className="px-2 py-3 w-24">
-                      <input
-                        type="number" min="0"
-                        value={line.reorderLevel}
-                        onChange={e => updateLine(line.id, 'reorderLevel', parseInt(e.target.value) || 0)}
-                        className={cellInputCls + ' text-center'}
-                      />
-                    </td>
-
-                    {/* Selling Price */}
-                    <td className="px-2 py-3 w-28">
-                      <input
-                        type="number" min="0" step="0.01"
-                        value={line.unitPrice}
-                        onChange={e => updateLine(line.id, 'unitPrice', parseFloat(e.target.value) || 0)}
-                        className={cellInputCls + ' text-right'}
-                      />
-                    </td>
-
-                    {/* Qty */}
-                    <td className="px-2 py-3 w-20">
-                      <input
-                        type="number" min="0"
-                        value={line.qty}
-                        onChange={e => updateLine(line.id, 'qty', parseInt(e.target.value) || 0)}
-                        className={cellInputCls + ' text-center'}
-                      />
-                    </td>
-
-                    {/* Discount */}
-                    <td className="px-2 py-3 w-24">
-                      <input
-                        type="number" min="0" max="100" step="0.01"
-                        value={line.discountPct}
-                        onChange={e => updateLine(line.id, 'discountPct', parseFloat(e.target.value) || 0)}
-                        className={cellInputCls + ' text-right'}
-                      />
-                    </td>
-
-                    {/* Tax */}
-                    <td className="px-2 py-3 w-24">
-                      <input
-                        type="number" min="0" max="100"
-                        value={line.taxPct}
-                        onChange={e => updateLine(line.id, 'taxPct', parseFloat(e.target.value) || 0)}
-                        className={cellInputCls + ' text-right'}
-                      />
-                    </td>
-
-                    {/* Amount */}
-                    <td className="px-2 py-3 w-28 text-right">
-                      <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
-                        {line.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <div className="p-6 space-y-4">
+            {lines.map((line, idx) => (
+              <div key={line.id} className="border border-zinc-200 dark:border-zinc-700 rounded-2xl overflow-hidden transition-all bg-white dark:bg-zinc-900/50">
+                {/* Card Header (Accordion Click Trigger) */}
+                <div 
+                  className="flex items-center justify-between px-5 py-3.5 bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-700 cursor-pointer select-none"
+                  onClick={() => toggleItem(line.id)}
+                >
+                  <div className="flex items-center gap-3">
+                    {collapsedItems[line.id] ? (
+                      <ChevronRight className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-orange-500" />
+                    )}
+                    <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <span>Item #{idx + 1}</span>
+                      {line.partName && (
+                        <span className="normal-case text-zinc-900 dark:text-white font-semibold">
+                          — {line.partName}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-4" onClick={e => e.stopPropagation()}>
+                    {/* Status Switch */}
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10px] font-bold uppercase tracking-wider ${line.status === 'Active' ? 'text-green-500' : 'text-zinc-400'}`}>
+                        {line.status}
                       </span>
-                    </td>
-
-                    {/* Status */}
-                    <td className="px-2 py-3 w-28">
-                      <select
-                        value={line.status}
-                        onChange={e => updateLine(line.id, 'status', e.target.value)}
-                        className={`${cellInputCls} appearance-none ${line.status === 'Active' ? 'text-green-600' : 'text-red-500'}`}
-                      >
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
-                      </select>
-                    </td>
-
-                    {/* Delete */}
-                    <td className="pr-5 py-3 text-center w-12">
                       <button
-                        onClick={() => setLines(prev => prev.filter(l => l.id !== line.id))}
-                        disabled={lines.length === 1}
-                        className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-30"
+                        type="button"
+                        onClick={() => updateLine(line.id, 'status', line.status === 'Active' ? 'Inactive' : 'Active')}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+                          line.status === 'Active' ? 'bg-orange-500' : 'bg-zinc-300 dark:bg-zinc-600'
+                        }`}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
+                          line.status === 'Active' ? 'translate-x-4' : 'translate-x-1'
+                        }`} />
                       </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                    {/* Delete */}
+                    <button
+                      type="button"
+                      onClick={() => setLines(prev => prev.filter(l => l.id !== line.id))}
+                      disabled={lines.length === 1}
+                      className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-30"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Card Body (Accordion Content - open if not collapsed) */}
+                {!collapsedItems[line.id] && (
+                  <div className="p-5 space-y-4 animate-in fade-in duration-200">
+                    {/* Row 1: Part Name (2 cols) + Category (1 col) + SKU (1 col) + Unit (1 col) + Reorder Level (1 col) */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+                      <div className="space-y-1.5 lg:col-span-2 md:col-span-2">
+                        <label className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider flex items-center gap-1">
+                          Part Name <span className="text-red-400">*</span>
+                        </label>
+                        <input
+                          value={line.partName}
+                          onChange={e => updateLine(line.id, 'partName', e.target.value)}
+                          placeholder="Enter part name"
+                          className="w-full h-11 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 placeholder-zinc-400 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1.5 lg:col-span-1">
+                        <label className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                          Category
+                        </label>
+                        <div className="relative">
+                          <select
+                            value={line.categoryId}
+                            onChange={e => updateLine(line.id, 'categoryId', e.target.value)}
+                            className="w-full h-11 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl pl-4 pr-10 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 appearance-none transition-all"
+                          >
+                            <option value="">Select category</option>
+                            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                          </select>
+                          <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 dark:text-zinc-500 pointer-events-none" />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5 lg:col-span-1">
+                        <label className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                          SKU (Placeholder)
+                        </label>
+                        <input
+                          value={line.sku}
+                          onChange={e => updateLine(line.id, 'sku', e.target.value)}
+                          placeholder="e.g. BRK-001"
+                          className="w-full h-11 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 placeholder-zinc-400 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1.5 lg:col-span-1">
+                        <label className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                          Unit
+                        </label>
+                        <input
+                          value={line.unit}
+                          onChange={e => updateLine(line.id, 'unit', e.target.value)}
+                          placeholder="pcs"
+                          className="w-full h-11 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1.5 lg:col-span-1">
+                        <label className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                          Reorder Level
+                        </label>
+                        <input
+                          type="number" min="0"
+                          value={line.reorderLevel}
+                          onChange={e => updateLine(line.id, 'reorderLevel', parseInt(e.target.value) || 0)}
+                          className="w-full h-11 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Row 2: Quantity (1 col) + Cost Price (1 col) + Selling Price (1 col) + Discount (1 col) + Tax (1 col) + Amount (1 col) */}
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                          Quantity
+                        </label>
+                        <input
+                          type="number" min="0"
+                          value={line.qty}
+                          onChange={e => updateLine(line.id, 'qty', parseInt(e.target.value) || 0)}
+                          className="w-full h-11 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider flex items-center gap-1">
+                          Cost Price <span className="text-red-400">*</span>
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 text-sm font-medium pointer-events-none">Rs.</span>
+                          <input
+                            type="number" min="0" step="0.01"
+                            value={line.costPrice}
+                            onChange={e => updateLine(line.id, 'costPrice', parseFloat(e.target.value) || 0)}
+                            className="w-full h-11 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl pl-11 pr-4 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 text-right transition-all"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider flex items-center gap-1">
+                          Selling Price <span className="text-red-400">*</span>
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 text-sm font-medium pointer-events-none">Rs.</span>
+                          <input
+                            type="number" min="0" step="0.01"
+                            value={line.unitPrice}
+                            onChange={e => updateLine(line.id, 'unitPrice', parseFloat(e.target.value) || 0)}
+                            className="w-full h-11 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl pl-11 pr-4 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 text-right transition-all"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                          Discount (%)
+                        </label>
+                        <input
+                          type="number" min="0" max="100" step="0.01"
+                          value={line.discountPct}
+                          onChange={e => updateLine(line.id, 'discountPct', parseFloat(e.target.value) || 0)}
+                          className="w-full h-11 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                          Tax % (VAT)
+                        </label>
+                        <input
+                          type="number" min="0" max="100"
+                          value={line.taxPct}
+                          onChange={e => updateLine(line.id, 'taxPct', parseFloat(e.target.value) || 0)}
+                          className="w-full h-11 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                          Amount
+                        </label>
+                        <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900/30 rounded-xl px-4 text-right flex items-center justify-end h-11 transition-all">
+                          <span className="text-sm font-bold text-orange-600 dark:text-orange-400">
+                            Rs. {line.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
 
           {/* Add Item */}
-          <div className="px-6 py-3 border-t border-zinc-100 dark:border-zinc-800 flex justify-end">
+          <div className="px-6 pb-6 flex justify-center">
             <button
               onClick={() => setLines(prev => [...prev, mkLine()])}
-              className="flex items-center gap-1.5 px-4 py-2 border border-orange-300 dark:border-orange-700 text-orange-600 dark:text-orange-400 rounded-xl text-sm font-semibold hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-all"
+              className="flex items-center gap-2 px-6 py-3 border-2 border-dashed border-orange-300 dark:border-orange-700 text-orange-600 dark:text-orange-400 rounded-2xl text-sm font-semibold hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:border-orange-400 transition-all w-full justify-center"
             >
-              <Plus className="w-4 h-4" /> Add Item
+              <Plus className="w-4 h-4" /> Add Another Item
             </button>
           </div>
 
