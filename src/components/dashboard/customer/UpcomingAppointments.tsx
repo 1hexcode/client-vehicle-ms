@@ -6,7 +6,9 @@ import Link from "next/link";
 interface Appointment {
   serviceType: string;
   vehicleNumber: string;
-  appointmentDate: string;
+  // API returns requestedAt; appointmentDate is a legacy alias
+  requestedAt?: string;
+  appointmentDate?: string;
   status: string;
 }
 
@@ -32,7 +34,7 @@ export default function UpcomingAppointments({ appointments }: UpcomingAppointme
               </div>
               <div className="flex-1 min-w-0">
                 <h4 className="font-semibold text-sm truncate">{appt.serviceType || 'Service Appointment'}</h4>
-                <p className="text-xs text-gray-500">{appt.vehicleNumber || 'Vehicle'} • {new Date(appt.appointmentDate).toLocaleDateString()}</p>
+                <p className="text-xs text-gray-500">{appt.vehicleNumber || 'Vehicle'} • {new Date(appt.requestedAt || appt.appointmentDate || '').toLocaleDateString()}</p>
               </div>
               <span className={`text-[10px] font-bold uppercase px-3 py-1 rounded-full ${
                 appt.status === 'Confirmed' ? 'bg-green-500/10 text-green-400' :

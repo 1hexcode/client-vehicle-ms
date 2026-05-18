@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Part, ApiResponse } from "@/types";
 import { 
@@ -8,24 +9,21 @@ import {
   Search, 
   AlertTriangle, 
   ArrowUpRight, 
-  ArrowDownRight, 
   MoreVertical,
   Edit,
   Trash2,
   Filter,
   Package,
-  History,
-  Loader2,
-  Store,
+  Eye,
   DollarSign,
   CheckCircle2
 } from "lucide-react";
-import Link from "next/link";
 import toast from "react-hot-toast";
 import { StatsCard } from "@/components/ui/StatsCard";
 import Modal from "@/components/ui/Modal";
 import DataTable from "@/components/ui/DataTable";
 import InventoryForm from "@/components/admin/InventoryForm";
+import PartDetailDialog from "@/components/admin/PartDetailDialog";
 import Switch from "@/components/ui/Switch";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PartCategory, Vendor } from "@/types";
@@ -39,6 +37,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function InventoryPage() {
+  const router = useRouter();
   const [parts, setParts] = useState<Part[]>([]);
   const [categories, setCategories] = useState<PartCategory[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
@@ -49,6 +48,7 @@ export default function InventoryPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [selectedPart, setSelectedPart] = useState<Part | undefined>();
+  const [selectedPartDetail, setSelectedPartDetail] = useState<Part | null>(null);
   const [partToDelete, setPartToDelete] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -82,8 +82,7 @@ export default function InventoryPage() {
   }, []);
 
   const handleAddPart = () => {
-    setSelectedPart(undefined);
-    setIsModalOpen(true);
+    router.push('/admin/stock-in');
   };
 
   const handleEditPart = (part: Part) => {
@@ -186,6 +185,7 @@ export default function InventoryPage() {
   };
 
   return (
+    <>
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -327,26 +327,36 @@ export default function InventoryPage() {
               header: "Actions",
               className: "text-right",
               render: (part) => (
-                <div className="flex items-center gap-3">
-                  <button 
-                    onClick={() => handleEditPart(part)}
-                    className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-orange-500 transition-colors"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button 
-                    onClick={() => handleDeleteClick(part.id)}
-                    className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-red-500 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                  <Link 
-                    href={`/admin/inventory/movements?partId=${part.id}`}
-                    className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-blue-500 transition-colors"
-                  >
-                    <History className="w-4 h-4" />
-                  </Link>
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                      <MoreVertical className="w-4 h-4 text-zinc-500" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => setSelectedPartDetail(part)}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <Eye className="w-4 h-4 text-blue-500" /> View Details
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleEditPart(part)}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <Edit className="w-4 h-4 text-orange-500" /> Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => handleDeleteClick(part.id)}
+                      className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
+                    >
+                      <Trash2 className="w-4 h-4" /> Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               ),
             },
           ]}
@@ -378,5 +388,38 @@ export default function InventoryPage() {
           }
         />
     </div>
+
+      {selectedPartDetail && (
+        <PartDetailDialog
+          part={selectedPartDetail}
+          onClose={() => setSelectedPartDetail(null)}
+        />
+      )}
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={selectedPart ? "Edit Part Details" : "Add New Vehicle Part"}
+      >
+        <InventoryForm 
+          initialData={selectedPart}
+          categories={categories}
+          vendors={vendors}
+          onSubmit={handleSubmit}
+          isLoading={submitting}
+        />
+      </Modal>
+
+      <ConfirmDialog
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Disable Part"
+        description="Are you sure you want to disable this part? It will no longer be available for sales or purchase orders."
+        confirmText="Yes, Disable"
+        isLoading={submitting}
+        variant="destructive"
+      />
+    </>
   );
 }

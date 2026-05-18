@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { User, ApiResponse } from "@/types";
 import {
   Plus, Mail, Phone, MapPin, UserCog2,
   Users, ShieldCheck, ShieldAlert, Trash2, MoreVertical,
-  CheckCircle2, XCircle,
+  CheckCircle2, XCircle, Eye,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import Modal from "@/components/ui/Modal";
@@ -24,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function StaffCustomersPage() {
+  const router = useRouter();
   const [customers, setCustomers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -163,6 +165,13 @@ export default function StaffCustomersPage() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => router.push(`/staff/customers/${row.id}`)}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <Eye className="w-4 h-4" /> View Details
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             {row.isActive ? (
               <DropdownMenuItem
