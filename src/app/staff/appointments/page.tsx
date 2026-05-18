@@ -35,6 +35,7 @@ export default function StaffAppointmentsPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isCancelOpen, setIsCancelOpen] = useState(false);
   const [isCompleteOpen, setIsCompleteOpen] = useState(false);
@@ -103,11 +104,23 @@ export default function StaffAppointmentsPage() {
   const handleConfirmAppt = () => targetId && updateStatus(targetId, "Confirmed").then(() => setIsConfirmOpen(false));
 
   const filtered = appointments.filter(
-    (a) =>
-      a.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      a.vehicleNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      a.serviceType?.toLowerCase().includes(searchTerm.toLowerCase())
+    (a) => {
+      const matchSearch =
+        a.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        a.vehicleNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        a.serviceType?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchStatus = statusFilter === "All" || a.status === statusFilter;
+      return matchSearch && matchStatus;
+    }
   );
+
+  const counts = {
+    All: appointments.length,
+    Pending: appointments.filter((a) => a.status === "Pending").length,
+    Confirmed: appointments.filter((a) => a.status === "Confirmed").length,
+    Completed: appointments.filter((a) => a.status === "Completed").length,
+    Cancelled: appointments.filter((a) => a.status === "Cancelled").length,
+  };
 
   const columns = [
     {
@@ -221,9 +234,7 @@ export default function StaffAppointmentsPage() {
     },
   ];
 
-  const pending = appointments.filter((a) => a.status === "Pending").length;
-  const confirmed = appointments.filter((a) => a.status === "Confirmed").length;
-  const completed = appointments.filter((a) => a.status === "Completed").length;
+
 
   return (
     <>
@@ -245,10 +256,29 @@ export default function StaffAppointmentsPage() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <StatsCard label="Pending" value={pending} icon={CalendarClock} variant="warning" />
-          <StatsCard label="Confirmed" value={confirmed} icon={CalendarCheck} variant="info" />
-          <StatsCard label="Completed" value={completed} icon={CheckCircle2} variant="success" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <StatsCard label="Pending" value={counts.Pending} icon={CalendarClock} variant="warning" />
+          <StatsCard label="Confirmed" value={counts.Confirmed} icon={CalendarCheck} variant="info" />
+          <StatsCard label="Completed" value={counts.Completed} icon={CheckCircle2} variant="success" />
+          <StatsCard label="Cancelled" value={counts.Cancelled} icon={XCircle} variant="danger" />
+        </div>
+
+        {/* Status Filter Tabs */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {(["All", "Pending", "Confirmed", "Completed", "Cancelled"] as const).map((status) => (
+            <button
+              key={status}
+              onClick={() => setStatusFilter(status)}
+              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all border ${
+                statusFilter === status
+                  ? "bg-orange-600 text-white border-orange-600 shadow-lg shadow-orange-500/20"
+                  : "bg-white dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-orange-300 hover:text-zinc-900 dark:hover:text-white"
+              }`}
+            >
+              {status}
+              <span className="ml-1.5 opacity-70">({counts[status]})</span>
+            </button>
+          ))}
         </div>
 
         <DataTable

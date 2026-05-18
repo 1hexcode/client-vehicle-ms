@@ -17,6 +17,7 @@ import {
   Package,
   BarChart3,
   ShoppingCart,
+  ShoppingBag,
   ShieldCheck,
   Menu,
   X,
@@ -40,6 +41,7 @@ const NAVIGATION: Record<string, NavLink[]> = {
     { name: "Inventory", href: "/admin/inventory", icon: Package },
     { name: "Categories", href: "/admin/categories", icon: LayoutGrid },
     { name: "Vendors", href: "/admin/vendors", icon: ShieldCheck },
+    { name: "Reviews", href: "/admin/reviews", icon: MessageSquare },
     { name: "Financial Reports", href: "/admin/reports", icon: BarChart3 },
     { name: "Settings", href: "/admin/settings", icon: User },
   ],
@@ -49,6 +51,7 @@ const NAVIGATION: Record<string, NavLink[]> = {
     { name: "Sales History", href: "/staff/sales", icon: History },
     { name: "Inventory", href: "/staff/inventory", icon: Package },
     { name: "Appointments", href: "/staff/appointments", icon: Calendar },
+    { name: "Part Requests", href: "/staff/requests", icon: ShoppingBag },
     { name: "Customers", href: "/staff/customers", icon: UsersIcon },
   ],
 
