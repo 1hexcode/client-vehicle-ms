@@ -130,7 +130,7 @@ function ReviewForm({ appointments, onSubmit, isLoading }: ReviewFormProps) {
         registration={register('appointmentId')}
         options={completedAppointments.map((a) => ({
           value: a.id,
-          label: `${a.serviceType} — ${new Date(a.requestedAt).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}`,
+          label: `${a.serviceType} - ${new Date(a.requestedAt).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}`,
         }))}
         placeholder="General review (not linked to an appointment)"
       />
@@ -206,7 +206,7 @@ export default function CustomerReviewsPage() {
   const avgRating =
     reviews.length > 0
       ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
-      : '—';
+      : '-';
 
   const ratingCounts = [5, 4, 3, 2, 1].map((star) => ({
     star,

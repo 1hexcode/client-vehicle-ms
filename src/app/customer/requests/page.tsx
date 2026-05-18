@@ -76,7 +76,7 @@ function PartRequestForm({ vehicles, onSubmit, isLoading }: RequestFormProps) {
         error={errors.vehicleId?.message}
         options={vehicles.map((v) => ({
           value: v.id,
-          label: `${v.vehicleNumber}${v.make ? ` — ${v.make} ${v.model || ''}` : ''}`,
+          label: `${v.vehicleNumber}${v.make ? ` - ${v.make} ${v.model || ''}` : ''}`,
         }))}
         placeholder={vehicles.length === 0 ? 'No vehicles registered' : 'Select your vehicle'}
         disabled={vehicles.length === 0}
@@ -90,7 +90,7 @@ function PartRequestForm({ vehicles, onSubmit, isLoading }: RequestFormProps) {
         label="Part Description" required
         registration={register('description')}
         error={errors.description?.message}
-        placeholder="Describe the vehicle part(s) you need — include part number, brand, specifications, or any other relevant details..."
+        placeholder="Describe the vehicle part(s) you need - include part number, brand, specifications, or any other relevant details..."
         rows={5}
       />
       <div className="bg-[#1A1A1A] border border-[#333] rounded-xl p-4 text-sm text-zinc-400">

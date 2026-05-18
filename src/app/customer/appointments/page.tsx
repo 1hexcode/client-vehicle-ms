@@ -71,7 +71,7 @@ function BookAppointmentForm({ vehicles, onSubmit, isLoading }: AppointmentFormP
         error={errors.vehicleId?.message}
         options={vehicles.map((v) => ({
           value: v.id,
-          label: `${v.vehicleNumber}${v.make ? ` — ${v.make} ${v.model || ''}` : ''}`,
+          label: `${v.vehicleNumber}${v.make ? ` - ${v.make} ${v.model || ''}` : ''}`,
         }))}
         placeholder={vehicles.length === 0 ? 'No vehicles registered yet' : 'Select your vehicle'}
         disabled={vehicles.length === 0}

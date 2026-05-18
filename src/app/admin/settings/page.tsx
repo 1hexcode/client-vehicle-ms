@@ -223,7 +223,7 @@ export default function AdminSettingsPage() {
                   key: "vendor",
                   header: "Vendor",
                   render: (i) => (
-                    <span className="text-sm text-zinc-700 dark:text-zinc-300">{i.vendorName || "—"}</span>
+                    <span className="text-sm text-zinc-700 dark:text-zinc-300">{i.vendorName || "-"}</span>
                   ),
                 },
                 {
@@ -405,10 +405,10 @@ function InvoiceDetail({ invoice }: { invoice: PurchaseInvoice }) {
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-        <Meta label="Vendor" value={invoice.vendorName || "—"} />
+        <Meta label="Vendor" value={invoice.vendorName || "-"} />
         <Meta label="Received" value={new Date(invoice.receivedAt || invoice.createdAt).toLocaleString()} />
         <Meta label="Items" value={String(invoice.items?.length || 0)} />
-        <Meta label="Status" value={invoice.status || "—"} />
+        <Meta label="Status" value={invoice.status || "-"} />
       </div>
 
       <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">

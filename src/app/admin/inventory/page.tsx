@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Part, ApiResponse } from "@/types";
 import { 
@@ -39,6 +40,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function InventoryPage() {
+  const router = useRouter();
   const [parts, setParts] = useState<Part[]>([]);
   const [categories, setCategories] = useState<PartCategory[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
@@ -82,8 +84,7 @@ export default function InventoryPage() {
   }, []);
 
   const handleAddPart = () => {
-    setSelectedPart(undefined);
-    setIsModalOpen(true);
+    router.push('/admin/stock-in');
   };
 
   const handleEditPart = (part: Part) => {

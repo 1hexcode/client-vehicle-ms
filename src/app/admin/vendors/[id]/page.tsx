@@ -23,7 +23,6 @@ import toast from "react-hot-toast";
 import Modal from "@/components/ui/Modal";
 import { StatsCard } from "@/components/ui/StatsCard";
 import VendorPaymentForm from "@/components/admin/VendorPaymentForm";
-import VendorAddPartsForm from "@/components/admin/VendorAddPartsForm";
 import Link from "next/link";
 
 export default function VendorDetailsPage() {
@@ -38,7 +37,6 @@ export default function VendorDetailsPage() {
   const [activeTab, setActiveTab] = useState<"payments" | "parts">("payments");
   
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [isAddPartsModalOpen, setIsAddPartsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const fetchData = async () => {
@@ -95,23 +93,6 @@ export default function VendorDetailsPage() {
     }
   };
 
-  const handleAddParts = async (data: any) => {
-    try {
-      setSubmitting(true);
-      const response: ApiResponse<Vendor> = await api.post(`/api/Vendors/${vendorId}/parts`, data);
-      if (response.success) {
-        toast.success(response.message || "Parts added and due amount updated");
-        setIsAddPartsModalOpen(false);
-        fetchData();
-      } else {
-        toast.error(response.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to add parts");
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   if (loading && !vendor) {
     return (
@@ -148,11 +129,11 @@ export default function VendorDetailsPage() {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setIsAddPartsModalOpen(true)}
+            onClick={() => router.push(`/admin/stock-in?vendorId=${vendorId}&vendorName=${encodeURIComponent(vendor.name)}`)}
             className="flex items-center gap-2 px-5 py-2.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-900 text-white rounded-xl font-medium shadow-lg transition-all active:scale-95"
           >
             <PackagePlus className="w-4 h-4" />
-            Add Parts Recieved
+            Add Parts Received
           </button>
           <button
             onClick={() => setIsPaymentModalOpen(true)}
@@ -390,14 +371,6 @@ export default function VendorDetailsPage() {
           onSubmit={handleCreatePayment}
           isLoading={submitting}
         />
-      </Modal>
-
-      <Modal
-        isOpen={isAddPartsModalOpen}
-        onClose={() => setIsAddPartsModalOpen(false)}
-        title="Add Received Parts"
-      >
-        <VendorAddPartsForm onSubmit={handleAddParts} isLoading={submitting} />
       </Modal>
     </div>
   );

@@ -25,7 +25,7 @@ export default function CustomerDashboard() {
 
   const avgRating = reviews.length > 0
     ? (reviews.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / reviews.length).toFixed(1)
-    : '—';
+    : '-';
 
   const stats = [
     { label: 'Registered Vehicles', value: vehicles.length, icon: Car, color: '#F97316' },
