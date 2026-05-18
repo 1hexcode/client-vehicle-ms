@@ -148,7 +148,10 @@ export interface SalesInvoice {
   createdByUserId: string;
   subtotal: number;
   discount: number;
+  discountRate: number;
+  serviceCharge: number;
   tax: number;
+  taxRate: number;
   total: number;
   status: string;
   issuedAt?: string;
@@ -157,4 +160,8 @@ export interface SalesInvoice {
   updatedAt?: string;
   lines: SalesInvoiceLine[];
 }
+
+export type SalesInvoiceDto = SalesInvoice;
+export type SalesInvoiceLineDto = SalesInvoiceLine;
+
 
