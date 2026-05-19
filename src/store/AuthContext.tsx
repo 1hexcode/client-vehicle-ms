@@ -82,8 +82,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(userData);
       Cookies.set('user', JSON.stringify(userData), { expires: 7 });
 
-      const dashboard = userData.role === 'Admin' ? '/admin/dashboard' : userData.role === 'Staff' ? '/staff/dashboard' : '/customer/dashboard';
-      router.push(dashboard);
+      // Honor a stored post-login redirect (set by /cart when guest hits checkout).
+      // Only follow it for Customers — admin/staff always go to their dashboards.
+      const postLoginRedirect =
+        typeof window !== 'undefined' ? sessionStorage.getItem('postLoginRedirect') : null;
+      if (postLoginRedirect) sessionStorage.removeItem('postLoginRedirect');
+
+      const dashboard = userData.role === 'Admin'
+        ? '/admin/dashboard'
+        : userData.role === 'Staff'
+          ? '/staff/dashboard'
+          : '/customer/dashboard';
+      router.push(userData.role === 'Customer' && postLoginRedirect ? postLoginRedirect : dashboard);
     } else {
       throw new Error(response.message || 'Login failed');
     }

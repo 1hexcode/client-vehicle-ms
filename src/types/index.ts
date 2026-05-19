@@ -7,6 +7,7 @@ export interface Part {
   name: string;
   sku: string;
   description?: string;
+  imageUrl?: string | null;
   costPrice: number;
   unitPrice: number;
   stockQuantity: number;
@@ -212,6 +213,22 @@ export interface PartRequest {
   status: string; // Requested | Processing | Fulfilled | Rejected
   handledByUserId?: string;
   handledByName?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface HotDeal {
+  id: string;
+  partId: string;
+  partName?: string;
+  partSku?: string;
+  categoryName?: string;
+  originalPrice?: number;
+  dealPrice: number;
+  discountPercentage?: number;
+  startsAt: string;
+  endsAt: string;
+  isActive: boolean;
   createdAt: string;
   updatedAt?: string;
 }

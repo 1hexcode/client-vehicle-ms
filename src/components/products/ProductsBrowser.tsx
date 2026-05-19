@@ -10,7 +10,6 @@ import {
   PackageX,
   ShoppingBag,
   ChevronDown,
-  Lock,
 } from "lucide-react";
 import { Part, PartCategory } from "@/types";
 import ProductsSidebar, { SortKey } from "./ProductsSidebar";
@@ -27,7 +26,6 @@ interface LoadState {
   parts: Part[];
   categories: PartCategory[];
   loading: boolean;
-  authRequired: boolean;
   error: string | null;
 }
 
@@ -44,12 +42,11 @@ export default function ProductsBrowser() {
     parts: [],
     categories: [],
     loading: true,
-    authRequired: false,
     error: null,
   });
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  // Fetch parts + categories once on mount (no auth redirect on 401).
+  // Fetch parts + categories once on mount. Guests can browse — 401s degrade to empty results.
   useEffect(() => {
     let cancelled = false;
     const apiBase = process.env.NEXT_PUBLIC_API_URL || "";
@@ -67,21 +64,8 @@ export default function ProductsBrowser() {
           fetch(`${apiBase}/api/part-categories`, { headers }),
         ]);
 
-        if (partsRes.status === 401 || catsRes.status === 401) {
-          if (!cancelled) {
-            setState({
-              parts: [],
-              categories: [],
-              loading: false,
-              authRequired: true,
-              error: null,
-            });
-          }
-          return;
-        }
-
-        const partsJson = await partsRes.json().catch(() => ({}));
-        const catsJson = await catsRes.json().catch(() => ({}));
+        const partsJson = partsRes.ok ? await partsRes.json().catch(() => ({})) : {};
+        const catsJson = catsRes.ok ? await catsRes.json().catch(() => ({})) : {};
 
         const parts: Part[] = Array.isArray(partsJson?.data)
           ? partsJson.data
@@ -95,7 +79,7 @@ export default function ProductsBrowser() {
             : [];
 
         if (!cancelled) {
-          setState({ parts, categories, loading: false, authRequired: false, error: null });
+          setState({ parts, categories, loading: false, error: null });
         }
       } catch (err: any) {
         if (!cancelled) {
@@ -103,7 +87,6 @@ export default function ProductsBrowser() {
             parts: [],
             categories: [],
             loading: false,
-            authRequired: false,
             error: err?.message || "Failed to load products",
           });
         }
@@ -304,9 +287,7 @@ export default function ProductsBrowser() {
         </div>
       </div>
 
-      {state.authRequired ? (
-        <AuthGate />
-      ) : state.error ? (
+      {state.error ? (
         <ErrorState message={state.error} />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8">
@@ -507,28 +488,3 @@ function ErrorState({ message }: { message: string }) {
   );
 }
 
-function AuthGate() {
-  return (
-    <div className="bg-[#0F0F0F] border border-[#222] rounded-2xl p-16 text-center">
-      <Lock className="w-10 h-10 text-[#F97316] mx-auto mb-3" />
-      <p className="font-semibold text-gray-100">Sign in to browse our parts catalogue</p>
-      <p className="text-sm text-gray-500 mt-1 max-w-md mx-auto">
-        Our full inventory is available to registered customers. Create a free account or sign in to keep browsing.
-      </p>
-      <div className="flex items-center justify-center gap-3 mt-5">
-        <Link
-          href="/auth/login"
-          className="px-5 py-2.5 rounded-xl bg-[#F97316] hover:bg-[#EA580C] text-white text-sm font-bold transition-colors"
-        >
-          Sign In
-        </Link>
-        <Link
-          href="/auth/register"
-          className="px-5 py-2.5 rounded-xl bg-[#141414] border border-[#222] hover:border-[#F97316]/40 text-white text-sm font-bold transition-colors"
-        >
-          Create Account
-        </Link>
-      </div>
-    </div>
-  );
-}

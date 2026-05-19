@@ -5,8 +5,12 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 export async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
   const token = Cookies.get('token');
 
+  const isFormData =
+    typeof FormData !== 'undefined' && options.body instanceof FormData;
+
   const headers = new Headers({
-    'Content-Type': 'application/json',
+    // Don't set Content-Type for FormData — the browser sets it (with boundary) automatically.
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...options.headers,
   });
 
@@ -44,4 +48,22 @@ export const api = {
     body: data ? JSON.stringify(data) : undefined 
   }),
   delete: (endpoint: string) => fetchWithAuth(endpoint, { method: 'DELETE' }),
+  upload: (endpoint: string, formData: FormData) =>
+    fetchWithAuth(endpoint, { method: 'POST', body: formData }),
 };
+
+// Uploads a single image to /api/uploads/image and returns the public URL.
+// Handles both `{ data: "<url>" }` and `{ data: { url|imageUrl|path: "<url>" } }` response shapes.
+export async function uploadImage(file: File, folder = 'parts'): Promise<string> {
+  const formData = new FormData();
+  formData.append('File', file);
+  formData.append('Folder', folder);
+  const res = await api.upload('/api/uploads/image', formData);
+  if (!res?.success) throw new Error(res?.message || 'Image upload failed');
+  const data = res.data;
+  if (typeof data === 'string') return data;
+  if (data && typeof data === 'object') {
+    return data.url || data.imageUrl || data.path || data.location || '';
+  }
+  return '';
+}
