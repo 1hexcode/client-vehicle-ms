@@ -76,12 +76,7 @@ export default function InventoryForm({
 
   const triggerFilePicker = () => fileInputRef.current?.click();
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    // Reset the input value so picking the same file twice still fires onChange.
-    if (e.target) e.target.value = "";
-    if (!file) return;
-
+  const uploadFile = async (file: File) => {
     if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
       toast.error("Use a JPG, PNG, WEBP, or GIF image");
       return;
@@ -104,6 +99,35 @@ export default function InventoryForm({
     }
   };
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    // Reset the input value so picking the same file twice still fires onChange.
+    if (e.target) e.target.value = "";
+    if (!file) return;
+    await uploadFile(file);
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of Array.from(items)) {
+      if (item.kind === "file" && item.type.startsWith("image/")) {
+        const file = item.getAsFile();
+        if (file) {
+          e.preventDefault();
+          void uploadFile(file);
+          return;
+        }
+      }
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file) void uploadFile(file);
+  };
+
   const clearImage = () => {
     setValue("imageUrl", "", { shouldDirty: true });
   };
@@ -116,7 +140,22 @@ export default function InventoryForm({
           Item Image
         </label>
         <div className="flex items-start gap-4">
-          <div className="relative w-28 h-28 shrink-0 rounded-xl overflow-hidden border border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center">
+          <div
+            tabIndex={0}
+            role="button"
+            aria-label={imageUrl ? "Item image — paste, drop, or click to replace" : "Item image — paste, drop, or click to upload"}
+            onClick={triggerFilePicker}
+            onPaste={handlePaste}
+            onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }}
+            onDrop={handleDrop}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                triggerFilePicker();
+              }
+            }}
+            className="group relative w-28 h-28 shrink-0 rounded-xl overflow-hidden border border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center cursor-pointer hover:border-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/10 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+          >
             {imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -125,7 +164,7 @@ export default function InventoryForm({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <ImageIcon className="w-7 h-7 text-zinc-400" />
+              <ImageIcon className="w-7 h-7 text-zinc-400 group-hover:text-orange-500 transition-colors" />
             )}
             {uploading && (
               <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
@@ -136,7 +175,7 @@ export default function InventoryForm({
 
           <div className="flex-1 space-y-2">
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Square images work best. JPG, PNG, WEBP, or GIF up to 5 MB.
+              Click, <kbd className="px-1 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-[10px] font-mono">paste</kbd>, or drop. JPG/PNG/WEBP/GIF up to 5 MB.
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <button
