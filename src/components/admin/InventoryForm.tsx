@@ -1,10 +1,14 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { ImagePlus, Loader2, X, Image as ImageIcon } from "lucide-react";
+import toast from "react-hot-toast";
 import { Part, PartCategory, Vendor } from "@/types";
 import { FormInput, FormSelect, FormTextarea, SubmitButton } from "@/components/ui/FormElements";
+import { uploadImage } from "@/lib/api";
 
 const inventorySchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -12,6 +16,7 @@ const inventorySchema = z.object({
   categoryId: z.string().min(1, "Please select a category"),
   vendorId: z.string().min(1, "Please select a vendor"),
   description: z.string().optional(),
+  imageUrl: z.string().optional().nullable(),
   costPrice: z.number().min(0, "Cost price cannot be negative"),
   unitPrice: z.number().min(0, "Unit price cannot be negative"),
   stockQuantity: z.number().int().min(0, "Stock cannot be negative"),
@@ -29,6 +34,9 @@ interface InventoryFormProps {
   isLoading: boolean;
 }
 
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
 export default function InventoryForm({
   initialData,
   categories,
@@ -39,6 +47,8 @@ export default function InventoryForm({
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<InventoryFormValues>({
     resolver: zodResolver(inventorySchema),
@@ -46,8 +56,9 @@ export default function InventoryForm({
       name: initialData?.name || "",
       sku: initialData?.sku || "",
       categoryId: initialData?.categoryId || "",
-      vendorId: initialData?.vendorId || "", 
+      vendorId: initialData?.vendorId || "",
       description: initialData?.description || "",
+      imageUrl: initialData?.imageUrl || "",
       costPrice: initialData?.costPrice || 0,
       unitPrice: initialData?.unitPrice || 0,
       stockQuantity: initialData?.stockQuantity || 0,
@@ -56,8 +67,118 @@ export default function InventoryForm({
     },
   });
 
+  // Hidden registration so the value flows through react-hook-form.
+  register("imageUrl");
+  const imageUrl = watch("imageUrl") || "";
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const triggerFilePicker = () => fileInputRef.current?.click();
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    // Reset the input value so picking the same file twice still fires onChange.
+    if (e.target) e.target.value = "";
+    if (!file) return;
+
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      toast.error("Use a JPG, PNG, WEBP, or GIF image");
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      toast.error("Image must be 5 MB or smaller");
+      return;
+    }
+
+    try {
+      setUploading(true);
+      const url = await uploadImage(file, "parts");
+      if (!url) throw new Error("Server didn't return an image URL");
+      setValue("imageUrl", url, { shouldDirty: true });
+      toast.success("Image uploaded");
+    } catch (err: any) {
+      toast.error(err?.message || "Image upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const clearImage = () => {
+    setValue("imageUrl", "", { shouldDirty: true });
+  };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {/* Image picker */}
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          Item Image
+        </label>
+        <div className="flex items-start gap-4">
+          <div className="relative w-28 h-28 shrink-0 rounded-xl overflow-hidden border border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center">
+            {imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={imageUrl}
+                alt="Part preview"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <ImageIcon className="w-7 h-7 text-zinc-400" />
+            )}
+            {uploading && (
+              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                <Loader2 className="w-5 h-5 text-white animate-spin" />
+              </div>
+            )}
+          </div>
+
+          <div className="flex-1 space-y-2">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              Square images work best. JPG, PNG, WEBP, or GIF up to 5 MB.
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={triggerFilePicker}
+                disabled={uploading}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
+              >
+                {uploading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Uploading…
+                  </>
+                ) : (
+                  <>
+                    <ImagePlus className="w-4 h-4" />
+                    {imageUrl ? "Replace image" : "Upload image"}
+                  </>
+                )}
+              </button>
+              {imageUrl && !uploading && (
+                <button
+                  type="button"
+                  onClick={clearImage}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-200 text-sm font-medium transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                  Remove
+                </button>
+              )}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={ACCEPTED_IMAGE_TYPES.join(",")}
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormInput
           label="Part Name"
@@ -148,7 +269,7 @@ export default function InventoryForm({
       </div>
 
       <div className="flex justify-end pt-4">
-        <SubmitButton isLoading={isLoading}>
+        <SubmitButton isLoading={isLoading || uploading}>
           {initialData ? "Update Part" : "Create Part"}
         </SubmitButton>
       </div>

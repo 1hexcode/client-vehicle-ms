@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/store/AuthContext";
+import { useCart } from "@/store/CartContext";
 import { 
   LogOut, 
   User as UserIcon, 
@@ -20,6 +21,7 @@ import { useState } from "react";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
+  const { itemCount } = useCart();
   const pathname = usePathname();
 
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -80,6 +82,14 @@ export default function Navbar() {
           <div className="flex items-center gap-5">
             {user ? (
               <div className="flex items-center gap-4">
+                <Link href="/cart" className="p-2.5 text-gray-400 hover:text-white transition-colors relative" title="Cart">
+                  <ShoppingCart size={20} />
+                  {itemCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-[#F97316] rounded-full text-[9px] font-bold flex items-center justify-center text-white">
+                      {itemCount > 99 ? "99+" : itemCount}
+                    </span>
+                  )}
+                </Link>
                 <Link
                   href={user.role === 'Admin' ? '/admin/dashboard' : user.role === 'Staff' ? '/staff/dashboard' : '/customer/dashboard'}
                   className="hidden sm:flex items-center gap-2 bg-[#F97316] hover:bg-[#EA580C] text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors"
@@ -99,9 +109,13 @@ export default function Navbar() {
                 <Link href="/auth/login" className="p-2.5 text-gray-400 hover:text-white transition-colors" title="Wishlist">
                   <Heart size={20} />
                 </Link>
-                <Link href="/auth/login" className="p-2.5 text-gray-400 hover:text-white transition-colors relative" title="Cart">
+                <Link href="/cart" className="p-2.5 text-gray-400 hover:text-white transition-colors relative" title="Cart">
                   <ShoppingCart size={20} />
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#F97316] rounded-full text-[9px] font-bold flex items-center justify-center text-white">0</span>
+                  {itemCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-[#F97316] rounded-full text-[9px] font-bold flex items-center justify-center text-white">
+                      {itemCount > 99 ? "99+" : itemCount}
+                    </span>
+                  )}
                 </Link>
                 <div className="w-px h-8 bg-[#333] mx-1" />
                 <Link href="/auth/login" className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm font-medium">
@@ -119,9 +133,9 @@ export default function Navbar() {
         {/* Category navigation strip */}
         <div className="max-w-7xl mx-auto hidden lg:flex items-center gap-8 py-3 text-sm border-t border-[#1A1A1A]">
           <Link href="/" className={`font-semibold transition-colors ${pathname === '/' ? 'text-[#F97316]' : 'text-gray-400 hover:text-white'}`}>Home</Link>
-          <Link href="#categories" className="text-gray-400 hover:text-white transition-colors">Categories</Link>
-          <Link href="#products" className="text-gray-400 hover:text-white transition-colors">Best Sellers</Link>
-          <Link href="#deals" className="text-gray-400 hover:text-white transition-colors">Hot Deals</Link>
+          <Link href="/products" className={`transition-colors ${pathname === '/products' ? 'text-[#F97316]' : 'text-gray-400 hover:text-white'}`}>Categories</Link>
+          <Link href="/#products" className="text-gray-400 hover:text-white transition-colors">Best Sellers</Link>
+          <Link href="/deals" className={`transition-colors ${pathname === '/deals' ? 'text-[#F97316]' : 'text-gray-400 hover:text-white'}`}>Hot Deals</Link>
           <Link href="/about" className={`transition-colors ${pathname === '/about' ? 'text-[#F97316]' : 'text-gray-400 hover:text-white'}`}>About Us</Link>
           <Link href="/contact" className={`transition-colors ${pathname === '/contact' ? 'text-[#F97316]' : 'text-gray-400 hover:text-white'}`}>Contact</Link>
         </div>
@@ -138,10 +152,11 @@ export default function Navbar() {
             <div className="space-y-1">
               {[
                 { label: 'Home', href: '/' },
-                { label: 'Categories', href: '/#categories' },
+                { label: 'Categories', href: '/products' },
                 { label: 'Best Sellers', href: '/#products' },
-                { label: 'Hot Deals', href: '/#deals' },
+                { label: 'Hot Deals', href: '/deals' },
                 { label: 'Shop', href: '/products' },
+                { label: 'Cart', href: '/cart' },
                 { label: 'About', href: '/about' },
                 { label: 'Contact', href: '/contact' },
               ].map(item => (
