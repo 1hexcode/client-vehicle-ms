@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   Menu,
   X,
+  FileText,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -43,6 +44,7 @@ const NAVIGATION: Record<string, NavLink[]> = {
     { name: "Vendors", href: "/admin/vendors", icon: ShieldCheck },
     { name: "Reviews", href: "/admin/reviews", icon: MessageSquare },
     { name: "Financial Reports", href: "/admin/reports", icon: BarChart3 },
+    { name: "Purchase Invoices", href: "/admin/purchase-invoices", icon: FileText },
     { name: "Settings", href: "/admin/settings", icon: User },
   ],
   Staff: [

@@ -21,7 +21,10 @@ export interface PartCategory {
   name: string;
   description?: string;
   vehicleType: string;
+  parentId?: string;
   isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 export interface Supplier {
