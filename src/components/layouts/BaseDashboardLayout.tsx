@@ -1,7 +1,10 @@
 "use client";
 
 import React from "react";
+import useSWR from "swr";
 import { useAuth } from "@/store/AuthContext";
+import { api } from "@/lib/api";
+import { MeProfile } from "@/types";
 import {
   Car,
   Calendar,
@@ -22,6 +25,8 @@ import {
   Menu,
   X,
   FileText,
+  Mail,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -45,6 +50,7 @@ const NAVIGATION: Record<string, NavLink[]> = {
     { name: "Reviews", href: "/admin/reviews", icon: MessageSquare },
     { name: "Financial Reports", href: "/admin/reports", icon: BarChart3 },
     { name: "Purchase Invoices", href: "/admin/purchase-invoices", icon: FileText },
+    { name: "Email Reminders", href: "/admin/reminders", icon: Mail },
     { name: "Settings", href: "/admin/settings", icon: User },
   ],
   Staff: [
@@ -77,6 +83,15 @@ export default function BaseDashboardLayout({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   const roleLinks = NAVIGATION[user?.role || "Customer"] || NAVIGATION.Customer;
+
+  const isCustomer = user?.role === "Customer";
+  const { data: meProfile } = useSWR<MeProfile>(
+    isCustomer ? "/api/me" : null,
+    (url: string) =>
+      api.get(url).then((res) => (res?.success ? res.data : res)),
+    { revalidateOnFocus: false },
+  );
+  const loyaltyPoints = meProfile?.loyaltyPoints;
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white flex overflow-hidden">
@@ -161,6 +176,21 @@ export default function BaseDashboardLayout({
           </div>
 
           <div className="flex items-center gap-4">
+            {isCustomer && typeof loyaltyPoints === "number" && (
+              <Link
+                href="/customer/profile"
+                title="View your loyalty rewards"
+                className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/15 to-orange-500/15 border border-amber-500/30 text-amber-300 hover:from-amber-500/25 hover:to-orange-500/25 transition-colors"
+              >
+                <Sparkles size={14} className="text-amber-400" />
+                <span className="text-sm font-bold tabular-nums">
+                  {loyaltyPoints.toLocaleString()}
+                </span>
+                <span className="text-[11px] uppercase tracking-wide text-amber-200/80">
+                  pts
+                </span>
+              </Link>
+            )}
             <div className="relative hidden md:block">
               <Search
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600"
