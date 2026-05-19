@@ -7,7 +7,7 @@ import { User, ApiResponse } from "@/types";
 import {
   Plus, Mail, Phone, MapPin, UserCog2,
   Users, ShieldCheck, ShieldAlert, Trash2, MoreVertical,
-  CheckCircle2, XCircle, Eye,
+  CheckCircle2, XCircle, Eye, Sparkles,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import Modal from "@/components/ui/Modal";
@@ -149,6 +149,19 @@ export default function StaffCustomersPage() {
             : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
         }`}>
           {row.isActive ? "Active" : "Inactive"}
+        </span>
+      ),
+    },
+    {
+      key: "loyalty",
+      header: "Loyalty",
+      render: (row: User) => (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300 border border-amber-200/60 dark:border-amber-500/30">
+          <Sparkles className="w-3 h-3" />
+          <span className="tabular-nums">
+            {typeof row.loyaltyPoints === "number" ? row.loyaltyPoints.toLocaleString() : 0}
+          </span>
+          <span className="text-[10px] uppercase tracking-wide opacity-80">pts</span>
         </span>
       ),
     },

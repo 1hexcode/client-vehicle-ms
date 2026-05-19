@@ -3,18 +3,20 @@
 import { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
 import { SalesInvoice, ApiResponse } from "@/types";
-import { 
-  FileText, 
-  Search, 
-  Calendar, 
-  User as UserIcon, 
-  Car, 
-  Eye, 
+import {
+  FileText,
+  Search,
+  Calendar,
+  User as UserIcon,
+  Car,
+  Eye,
   History,
   Download,
   AlertCircle,
   CheckCircle2,
-  Printer
+  Printer,
+  Mail,
+  Loader2
 } from "lucide-react";
 import toast from "react-hot-toast";
 import DataTable from "@/components/ui/DataTable";
@@ -27,6 +29,26 @@ export default function StaffSalesHistoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedInvoice, setSelectedInvoice] = useState<SalesInvoice | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [sendingEmailId, setSendingEmailId] = useState<string | null>(null);
+
+  const handleSendEmail = useCallback(async (invoice: SalesInvoice) => {
+    try {
+      setSendingEmailId(invoice.id);
+      const res: ApiResponse<unknown> = await api.post(
+        `/api/sales-invoices/${invoice.id}/email`,
+        {},
+      );
+      if (res.success) {
+        toast.success(res.message || `Invoice ${invoice.invoiceNumber} emailed to ${invoice.customerName}`);
+      } else {
+        toast.error(res.message || "Failed to send invoice email");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send invoice email");
+    } finally {
+      setSendingEmailId(null);
+    }
+  }, []);
 
   const fetchInvoices = useCallback(async () => {
     try {
@@ -122,12 +144,27 @@ export default function StaffSalesHistoryPage() {
       header: "Actions",
       className: "text-right",
       render: (inv: SalesInvoice) => (
-        <button
-          onClick={() => handleViewDetails(inv)}
-          className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500 hover:text-orange-600 transition-colors"
-        >
-          <Eye className="w-5 h-5" />
-        </button>
+        <div className="flex items-center justify-end gap-1">
+          <button
+            onClick={() => handleViewDetails(inv)}
+            title="View details"
+            className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500 hover:text-orange-600 transition-colors"
+          >
+            <Eye className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => handleSendEmail(inv)}
+            disabled={sendingEmailId === inv.id || inv.status === "Void"}
+            title={inv.status === "Void" ? "Cannot email a voided invoice" : "Email invoice to customer"}
+            className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500 hover:text-orange-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {sendingEmailId === inv.id ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Mail className="w-5 h-5" />
+            )}
+          </button>
+        </div>
       ),
     },
   ];
@@ -272,6 +309,20 @@ export default function StaffSalesHistoryPage() {
             </div>
 
             <div className="flex justify-end gap-3 pt-4">
+              {selectedInvoice.status !== "Void" && (
+                <button
+                  onClick={() => handleSendEmail(selectedInvoice)}
+                  disabled={sendingEmailId === selectedInvoice.id}
+                  className="flex items-center gap-2 px-6 py-3 bg-orange-50 text-orange-600 border border-orange-200 rounded-xl font-bold hover:bg-orange-100 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed dark:bg-orange-500/10 dark:text-orange-400 dark:border-orange-500/30"
+                >
+                  {sendingEmailId === selectedInvoice.id ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Mail className="w-5 h-5" />
+                  )}
+                  {sendingEmailId === selectedInvoice.id ? "Sending..." : "Email to Customer"}
+                </button>
+              )}
               {selectedInvoice.status !== "Void" && (
                 <button
                   onClick={() => {
