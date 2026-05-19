@@ -27,6 +27,7 @@ import {
   FileText,
   Mail,
   Sparkles,
+  Flame,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -44,8 +45,9 @@ const NAVIGATION: Record<string, NavLink[]> = {
   Admin: [
     { name: "Overview", href: "/admin/dashboard", icon: LayoutDashboard },
     { name: "Staff Management", href: "/admin/staff", icon: UsersIcon },
-    { name: "Inventory", href: "/admin/inventory", icon: Package },
     { name: "Categories", href: "/admin/categories", icon: LayoutGrid },
+    { name: "Inventory", href: "/admin/inventory", icon: Package },
+    { name: "Hot Deals", href: "/admin/hot-deals", icon: Flame },
     { name: "Vendors", href: "/admin/vendors", icon: ShieldCheck },
     { name: "Reviews", href: "/admin/reviews", icon: MessageSquare },
     { name: "Financial Reports", href: "/admin/reports", icon: BarChart3 },
@@ -58,6 +60,7 @@ const NAVIGATION: Record<string, NavLink[]> = {
     { name: "Point of Sale", href: "/staff/pos", icon: ShoppingCart },
     { name: "Sales History", href: "/staff/sales", icon: History },
     { name: "Inventory", href: "/staff/inventory", icon: Package },
+    { name: "Hot Deals", href: "/staff/hot-deals", icon: Flame },
     { name: "Appointments", href: "/staff/appointments", icon: Calendar },
     { name: "Part Requests", href: "/staff/requests", icon: ShoppingBag },
     { name: "Customers", href: "/staff/customers", icon: UsersIcon },

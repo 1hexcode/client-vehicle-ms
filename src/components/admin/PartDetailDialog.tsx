@@ -37,8 +37,13 @@ export default function PartDetailDialog({ part, onClose }: PartDetailDialogProp
         {/* Header */}
         <div className="flex items-start justify-between p-6 border-b border-zinc-100 dark:border-zinc-800">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/30 flex items-center justify-center">
-              <Package className="w-7 h-7 text-orange-600" />
+            <div className="w-14 h-14 rounded-2xl bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/30 flex items-center justify-center overflow-hidden">
+              {part.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={part.imageUrl} alt={part.name} className="w-full h-full object-cover" />
+              ) : (
+                <Package className="w-7 h-7 text-orange-600" />
+              )}
             </div>
             <div>
               <h2 className="text-xl font-bold text-zinc-900 dark:text-white">{part.name}</h2>

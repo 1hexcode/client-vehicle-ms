@@ -3,6 +3,7 @@
 import { Heart, Settings2, ShoppingBag, Package } from "lucide-react";
 import toast from "react-hot-toast";
 import { Part } from "@/types";
+import { useCart } from "@/store/CartContext";
 
 interface ProductCardProps {
   part: Part;
@@ -10,18 +11,45 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ part, categoryLabel }: ProductCardProps) {
+  const { addItem } = useCart();
   const inStock = part.stockQuantity > 0;
   const lowStock = inStock && part.stockQuantity <= part.reorderLevel;
+
+  const handleAddToCart = () => {
+    if (!inStock) {
+      toast.error("This part is currently out of stock");
+      return;
+    }
+    addItem({
+      partId: part.id,
+      name: part.name,
+      sku: part.sku,
+      unitPrice: part.unitPrice,
+      imageUrl: part.imageUrl,
+      stockQuantity: part.stockQuantity,
+    });
+    toast.success(`${part.name} added to cart`);
+  };
 
   return (
     <article className="bg-[#141414] rounded-2xl border border-[#222] overflow-hidden group hover:border-[#F97316]/40 transition-all duration-300 flex flex-col">
       {/* Image / placeholder */}
       <div className="relative aspect-square bg-[#1A1A1A] flex items-center justify-center overflow-hidden">
-        <Settings2
-          size={56}
-          className="text-[#2A2A2A] group-hover:text-[#3A3A3A] group-hover:scale-110 transition-all duration-500"
-          strokeWidth={1.2}
-        />
+        {part.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={part.imageUrl}
+            alt={part.name}
+            loading="lazy"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+        ) : (
+          <Settings2
+            size={56}
+            className="text-[#2A2A2A] group-hover:text-[#3A3A3A] group-hover:scale-110 transition-all duration-500"
+            strokeWidth={1.2}
+          />
+        )}
 
         {/* Stock badge */}
         {!inStock ? (
@@ -75,11 +103,7 @@ export default function ProductCard({ part, categoryLabel }: ProductCardProps) {
             </p>
           </div>
           <button
-            onClick={() =>
-              inStock
-                ? toast.success(`${part.name} added to cart`)
-                : toast.error("This part is currently out of stock")
-            }
+            onClick={handleAddToCart}
             disabled={!inStock}
             className="w-10 h-10 rounded-xl bg-[#F97316] hover:bg-[#EA580C] text-white flex items-center justify-center transition-colors disabled:bg-[#1A1A1A] disabled:text-gray-600 disabled:cursor-not-allowed"
             aria-label="Add to cart"
