@@ -125,6 +125,7 @@ export interface MeProfile {
   phoneNumber: string;
   address: string;
   role: string;
+  loyaltyPoints?: number;
 }
 
 export interface User {
@@ -135,6 +136,7 @@ export interface User {
   address: string;
   role: string;
   isActive: boolean;
+  loyaltyPoints?: number;
 }
 
 export interface Vehicle {
