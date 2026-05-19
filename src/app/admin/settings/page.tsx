@@ -16,36 +16,34 @@ import { ApiResponse, MeProfile } from "@/types";
 import ProfileForm, { ProfileFormValues } from "@/components/admin/ProfileForm";
 import ChangePasswordForm, { ChangePasswordFormValues } from "@/components/admin/ChangePasswordForm";
 import SystemSettingsForm, { SystemSettingsFormValues } from "@/components/admin/SystemSettingsForm";
+import useSWR from "swr";
 
 type TabKey = "system" | "profile" | "security";
+
+const fetcher = (url: string) =>
+  api.get(url).then((res) => {
+    if (!res.success) throw new Error(res.message || "Failed to load data");
+    return res.data;
+  });
 
 export default function AdminSettingsPage() {
   const [tab, setTab] = useState<TabKey>("system");
 
   // ── System Settings ──────────────────────────────────────
-  const [systemSettings, setSystemSettings] = useState<SystemSettingsFormValues | null>(null);
-  const [settingsLoading, setSettingsLoading] = useState(true);
+  const {
+    data: systemSettings,
+    error: settingsError,
+    isLoading: settingsLoading,
+    mutate: mutateSettings,
+  } = useSWR<SystemSettingsFormValues>(tab === "system" ? "/api/settings" : null, fetcher);
+
   const [savingSettings, setSavingSettings] = useState(false);
 
-  const fetchSystemSettings = async () => {
-    try {
-      setSettingsLoading(true);
-      const res: ApiResponse<SystemSettingsFormValues> = await api.get("/api/settings");
-      if (res.success && res.data) {
-        setSystemSettings(res.data);
-      } else {
-        toast.error(res.message || "Failed to load system settings");
-      }
-    } catch (e: any) {
-      toast.error(e.message || "Failed to load system settings");
-    } finally {
-      setSettingsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    if (tab === "system") fetchSystemSettings();
-  }, [tab]);
+    if (settingsError) {
+      toast.error(settingsError.message || "Failed to load system settings");
+    }
+  }, [settingsError]);
 
   const handleSaveSettings = async (data: SystemSettingsFormValues) => {
     try {
@@ -53,8 +51,7 @@ export default function AdminSettingsPage() {
       const res: ApiResponse<SystemSettingsFormValues> = await api.put("/api/settings", data);
       if (res.success) {
         toast.success(res.message || "System settings updated");
-        if (res.data) setSystemSettings(res.data);
-        else fetchSystemSettings();
+        if (res.data) mutateSettings(res.data, false);
       } else {
         toast.error(res.message || "Failed to update settings");
       }
@@ -66,30 +63,21 @@ export default function AdminSettingsPage() {
   };
 
   // ── Profile / Password ───────────────────────────────────
-  const [profile, setProfile] = useState<MeProfile | null>(null);
-  const [profileLoading, setProfileLoading] = useState(false);
+  const {
+    data: profile,
+    error: profileError,
+    isLoading: profileLoading,
+    mutate: mutateProfile,
+  } = useSWR<MeProfile>(tab === "profile" ? "/api/me" : null, fetcher);
+
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
 
-  const fetchProfile = async () => {
-    try {
-      setProfileLoading(true);
-      const res: ApiResponse<MeProfile> = await api.get("/api/me");
-      if (res.success && res.data) {
-        setProfile(res.data);
-      } else {
-        toast.error(res.message || "Failed to load profile");
-      }
-    } catch (e: any) {
-      toast.error(e.message || "Failed to load profile");
-    } finally {
-      setProfileLoading(false);
-    }
-  };
-
   useEffect(() => {
-    if (tab === "profile") fetchProfile();
-  }, [tab]);
+    if (profileError) {
+      toast.error(profileError.message || "Failed to load profile");
+    }
+  }, [profileError]);
 
   const handleSaveProfile = async (data: ProfileFormValues) => {
     try {
@@ -97,8 +85,7 @@ export default function AdminSettingsPage() {
       const res: ApiResponse<MeProfile> = await api.put("/api/me", data);
       if (res.success) {
         toast.success(res.message || "Profile updated");
-        if (res.data) setProfile(res.data);
-        else fetchProfile();
+        if (res.data) mutateProfile(res.data, false);
       } else {
         toast.error(res.message || "Failed to update profile");
       }
