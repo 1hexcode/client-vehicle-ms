@@ -29,7 +29,7 @@ interface PartRequest {
 }
 
 const STATUS_STYLES: Record<string, { badge: string; dot: string; icon: any }> = {
-  Pending: {
+  Requested: {
     badge: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
     dot: 'bg-amber-400',
     icon: Clock,
@@ -166,7 +166,7 @@ export default function CustomerPartRequestsPage() {
 
   const counts = {
     All: requests.length,
-    Pending: requests.filter((r) => r.status === 'Pending').length,
+    Requested: requests.filter((r) => r.status === 'Requested').length,
     Processing: requests.filter((r) => r.status === 'Processing').length,
     Fulfilled: requests.filter((r) => r.status === 'Fulfilled').length,
     Rejected: requests.filter((r) => r.status === 'Rejected').length,
@@ -258,7 +258,7 @@ export default function CustomerPartRequestsPage() {
             {filtered
               .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
               .map((req) => {
-                const style = STATUS_STYLES[req.status] || STATUS_STYLES['Pending'];
+                const style = STATUS_STYLES[req.status] || STATUS_STYLES['Requested'];
                 const StatusIcon = style.icon;
                 return (
                   <div

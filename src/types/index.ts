@@ -209,7 +209,7 @@ export interface PartRequest {
   vehicleId: string;
   vehicleNumber: string;
   description: string;
-  status: string; // Pending | Processing | Fulfilled | Rejected
+  status: string; // Requested | Processing | Fulfilled | Rejected
   handledByUserId?: string;
   handledByName?: string;
   createdAt: string;

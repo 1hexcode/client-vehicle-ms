@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const STATUS_STYLES: Record<string, string> = {
-  Pending: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+  Requested: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
   Processing: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
   Fulfilled: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
   Rejected: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
@@ -72,7 +72,7 @@ export default function StaffPartRequestsPage() {
 
   const counts = {
     All: requests.length,
-    Pending: requests.filter((r) => r.status === 'Pending').length,
+    Requested: requests.filter((r) => r.status === 'Requested').length,
     Processing: requests.filter((r) => r.status === 'Processing').length,
     Fulfilled: requests.filter((r) => r.status === 'Fulfilled').length,
     Rejected: requests.filter((r) => r.status === 'Rejected').length,
@@ -147,7 +147,7 @@ export default function StaffPartRequestsPage() {
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuLabel>Update Status</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {(row.status === 'Pending' || row.status === 'Processing') ? (
+            {(row.status === 'Requested' || row.status === 'Processing') ? (
               <>
                 <DropdownMenuItem
                   onClick={() => { setTargetId(row.id); setConfirmAction('Fulfilled'); }}
@@ -161,7 +161,7 @@ export default function StaffPartRequestsPage() {
                 >
                   <XCircle className="w-4 h-4" /> Reject
                 </DropdownMenuItem>
-                {row.status === 'Pending' && (
+                {row.status === 'Requested' && (
                   <>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
@@ -207,7 +207,7 @@ export default function StaffPartRequestsPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatsCard label="Pending" value={counts.Pending} icon={Clock} variant="warning" />
+          <StatsCard label="Requested" value={counts.Requested} icon={Clock} variant="warning" />
           <StatsCard label="Processing" value={counts.Processing} icon={Package} variant="info" />
           <StatsCard label="Fulfilled" value={counts.Fulfilled} icon={CheckCircle2} variant="success" />
           <StatsCard label="Rejected" value={counts.Rejected} icon={XCircle} variant="danger" />
@@ -215,7 +215,7 @@ export default function StaffPartRequestsPage() {
 
         {/* Status Filter Tabs */}
         <div className="flex items-center gap-2 flex-wrap">
-          {(['All', 'Pending', 'Processing', 'Fulfilled', 'Rejected'] as const).map((status) => (
+          {(['All', 'Requested', 'Processing', 'Fulfilled', 'Rejected'] as const).map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}

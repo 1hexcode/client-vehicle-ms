@@ -122,8 +122,8 @@ export default function Navbar() {
           <Link href="#categories" className="text-gray-400 hover:text-white transition-colors">Categories</Link>
           <Link href="#products" className="text-gray-400 hover:text-white transition-colors">Best Sellers</Link>
           <Link href="#deals" className="text-gray-400 hover:text-white transition-colors">Hot Deals</Link>
-          <Link href="#" className="text-gray-400 hover:text-white transition-colors">About Us</Link>
-          <Link href="#" className="text-gray-400 hover:text-white transition-colors">Contact</Link>
+          <Link href="/about" className={`transition-colors ${pathname === '/about' ? 'text-[#F97316]' : 'text-gray-400 hover:text-white'}`}>About Us</Link>
+          <Link href="/contact" className={`transition-colors ${pathname === '/contact' ? 'text-[#F97316]' : 'text-gray-400 hover:text-white'}`}>Contact</Link>
         </div>
       </nav>
 
@@ -136,10 +136,23 @@ export default function Navbar() {
               <button onClick={() => setMobileOpen(false)}><X size={24} /></button>
             </div>
             <div className="space-y-1">
-              {['Home', 'Categories', 'Best Sellers', 'Hot Deals', 'About', 'Contact'].map(item => (
-                <a key={item} href="#" className="block py-3 px-4 text-gray-300 hover:text-[#F97316] hover:bg-[#1A1A1A] rounded-lg transition-all text-sm font-medium">
-                  {item}
-                </a>
+              {[
+                { label: 'Home', href: '/' },
+                { label: 'Categories', href: '/#categories' },
+                { label: 'Best Sellers', href: '/#products' },
+                { label: 'Hot Deals', href: '/#deals' },
+                { label: 'Shop', href: '/products' },
+                { label: 'About', href: '/about' },
+                { label: 'Contact', href: '/contact' },
+              ].map(item => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="block py-3 px-4 text-gray-300 hover:text-[#F97316] hover:bg-[#1A1A1A] rounded-lg transition-all text-sm font-medium"
+                >
+                  {item.label}
+                </Link>
               ))}
             </div>
             {!user && (
