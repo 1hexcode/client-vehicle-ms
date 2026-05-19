@@ -62,6 +62,32 @@ function stripReasoningTags(text: string): string {
   return text.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
 }
 
+// Some reasoning models (e.g. nemotron-*-reasoning) dump their raw chain-of-thought
+// into `content` instead of producing a clean answer. Detect telltale planning prose
+// so we don't render it to the user.
+function looksLikeReasoningLeakage(text: string): boolean {
+  if (!text) return false;
+  const head = text.slice(0, 400).toLowerCase();
+  const planners = [
+    "we need to respond",
+    "we must respond",
+    "we should respond",
+    "let's craft",
+    "let me craft",
+    "let me think",
+    "the user is asking",
+    "the user says",
+    "according to rules",
+    "according to the rules",
+    "okay, the user",
+    "ok, the user",
+    "as the mechanic guy",
+  ];
+  const hits = planners.filter((p) => head.includes(p)).length;
+  // Two or more planner-phrases near the top is a strong signal it's CoT, not an answer.
+  return hits >= 2;
+}
+
 const MAX_HISTORY = 20;
 const MAX_USER_MESSAGE_CHARS = 4000;
 
@@ -75,7 +101,10 @@ export async function POST(req: Request) {
   }
 
   const apiKey = process.env.OPENROUTER_KEY;
-  const model = process.env.OPENROUTER_LLM_MODEL || "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free";
+  // Default to a non-reasoning instruct model. Reasoning models (e.g. nemotron-*-reasoning,
+  // deepseek-r1) frequently leak their chain-of-thought into `content` and produce unusable
+  // output for a chatbot UI.
+  const model = process.env.OPENROUTER_LLM_MODEL || "meta-llama/llama-3.3-70b-instruct:free";
 
   if (!apiKey) {
     return NextResponse.json(
@@ -140,14 +169,10 @@ export async function POST(req: Request) {
     const choice = data?.choices?.[0];
     const message = choice?.message ?? {};
 
-    // Reasoning models (e.g. nvidia/nemotron-*-reasoning) sometimes put the
-    // final answer in `reasoning` / `reasoning_content` and leave `content` empty.
+    // `content` is the answer. `reasoning`/`reasoning_content` are chain-of-thought
+    // (internal planning) — do NOT fall back to them, since rendering CoT looks broken.
     const rawContent: string =
-      pickString(message.content) ||
-      pickString(message.reasoning_content) ||
-      pickString(message.reasoning) ||
-      pickString(choice?.text) ||
-      "";
+      pickString(message.content) || pickString(choice?.text) || "";
 
     const reply = stripReasoningTags(rawContent).trim();
 
@@ -163,7 +188,24 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: `The mechanic had nothing to say (finish_reason: ${choice?.finish_reason ?? "unknown"}). Try rephrasing or switch to a different OPENROUTER_LLM_MODEL.`,
+          message: `The mechanic had nothing to say (finish_reason: ${choice?.finish_reason ?? "unknown"}). Try a different OPENROUTER_LLM_MODEL — a non-reasoning instruct model like meta-llama/llama-3.3-70b-instruct:free works best.`,
+        },
+        { status: 502 },
+      );
+    }
+
+    if (looksLikeReasoningLeakage(reply)) {
+      console.warn(
+        "Mechanic chat: chain-of-thought leakage detected. model=",
+        model,
+        "sample=",
+        reply.slice(0, 300),
+      );
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "The selected model returned its internal reasoning instead of an answer. Set OPENROUTER_LLM_MODEL in .env to a non-reasoning instruct model (e.g. meta-llama/llama-3.3-70b-instruct:free) and try again.",
         },
         { status: 502 },
       );

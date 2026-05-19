@@ -2,16 +2,18 @@
 
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { api } from '@/lib/api';
+import { api, uploadImage } from '@/lib/api';
 import { Vendor, PartCategory, ApiResponse } from '@/types';
 import {
   ArrowLeft, Plus, Trash2, Paperclip, Package,
   ChevronDown, ChevronUp, ChevronRight, Upload, X,
+  ImagePlus, Loader2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface LineItem {
   id: string;
+  imageUrl: string;
   partName: string;
   categoryId: string;
   sku: string;
@@ -29,12 +31,16 @@ interface LineItem {
 function mkLine(): LineItem {
   return {
     id: crypto.randomUUID(),
+    imageUrl: '',
     partName: '', categoryId: '', sku: '', unit: 'pcs',
     costPrice: 0, reorderLevel: 0, unitPrice: 0,
     qty: 0, discountPct: 0, taxPct: 13,
     status: 'Active', amount: 0,
   };
 }
+
+const ACCEPTED_ITEM_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const MAX_ITEM_IMAGE_BYTES = 5 * 1024 * 1024;
 
 function calcAmount(l: LineItem): number {
   const base = l.costPrice * l.qty;
@@ -75,6 +81,76 @@ function StockInContent() {
   const [submitting, setSubmitting] = useState(false);
   const [collapsedItems, setCollapsedItems] = useState<Record<string, boolean>>({});
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Per-line item image upload state — shared hidden input, targeted by line id.
+  const [imageUploadingFor, setImageUploadingFor] = useState<Record<string, boolean>>({});
+  const itemImageInputRef = useRef<HTMLInputElement>(null);
+  const itemImageTargetIdRef = useRef<string | null>(null);
+
+  const triggerItemImagePicker = (lineId: string) => {
+    itemImageTargetIdRef.current = lineId;
+    if (itemImageInputRef.current) {
+      itemImageInputRef.current.value = '';
+      itemImageInputRef.current.click();
+    }
+  };
+
+  const uploadItemImage = async (lineId: string, file: File) => {
+    if (!ACCEPTED_ITEM_IMAGE_TYPES.includes(file.type)) {
+      toast.error('Use a JPG, PNG, WEBP, or GIF image');
+      return;
+    }
+    if (file.size > MAX_ITEM_IMAGE_BYTES) {
+      toast.error('Image must be 5 MB or smaller');
+      return;
+    }
+
+    try {
+      setImageUploadingFor(prev => ({ ...prev, [lineId]: true }));
+      const url = await uploadImage(file, 'parts');
+      if (!url) throw new Error("Server didn't return an image URL");
+      updateLine(lineId, 'imageUrl', url);
+      toast.success('Image uploaded');
+    } catch (err: any) {
+      toast.error(err?.message || 'Image upload failed');
+    } finally {
+      setImageUploadingFor(prev => {
+        const { [lineId]: _drop, ...rest } = prev;
+        return rest;
+      });
+    }
+  };
+
+  const handleItemImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const lineId = itemImageTargetIdRef.current;
+    if (e.target) e.target.value = '';
+    if (!file || !lineId) return;
+    await uploadItemImage(lineId, file);
+  };
+
+  const handleItemImagePaste = (e: React.ClipboardEvent, lineId: string) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of Array.from(items)) {
+      if (item.kind === 'file' && item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (file) {
+          e.preventDefault();
+          void uploadItemImage(lineId, file);
+          return;
+        }
+      }
+    }
+  };
+
+  const handleItemImageDrop = (e: React.DragEvent, lineId: string) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file) void uploadItemImage(lineId, file);
+  };
+
+  const anyImageUploading = Object.values(imageUploadingFor).some(Boolean);
 
   const toggleItem = (id: string) => {
     setCollapsedItems(prev => ({ ...prev, [id]: !prev[id] }));
@@ -132,11 +208,38 @@ function StockInContent() {
     if (!vendorId) { toast.error('Select a vendor'); return; }
     const validLines = lines.filter(l => l.partName.trim() && l.qty > 0);
     if (validLines.length === 0) { toast.error('Add at least one item with name and quantity'); return; }
+    for (const l of validLines) {
+      if (!l.sku.trim()) { toast.error(`Item "${l.partName}" needs an SKU`); return; }
+      if (!l.categoryId) { toast.error(`Item "${l.partName}" needs a category`); return; }
+    }
 
     try {
       setSubmitting(true);
 
-      // Build payload - creates new parts AND records purchase
+      // The purchase-invoices endpoint references existing parts by id, so create
+      // each part first and use the returned id in the invoice items.
+      const createdParts = await Promise.all(
+        validLines.map(async (l) => {
+          const partBody = {
+            name: l.partName,
+            sku: l.sku,
+            categoryId: l.categoryId,
+            vendorId,
+            imageUrl: l.imageUrl || undefined,
+            costPrice: l.costPrice,
+            unitPrice: l.unitPrice,
+            stockQuantity: 0,
+            reorderLevel: l.reorderLevel,
+            isActive: l.status === 'Active',
+          };
+          const res: ApiResponse<{ id: string }> = await api.post('/api/Parts', partBody);
+          if (!res.success || !res.data?.id) {
+            throw new Error(res.message || `Failed to create part "${l.partName}"`);
+          }
+          return { line: l, partId: res.data.id };
+        })
+      );
+
       const payload = {
         vendorId,
         receivedAt: new Date(receivedDate).toISOString(),
@@ -147,18 +250,10 @@ function StockInContent() {
         attachmentUrl: attachmentUrl || undefined,
         isDraft,
         tax: totalVat,
-        items: validLines.map(l => ({
-          partName: l.partName,
-          categoryId: l.categoryId || undefined,
-          sku: l.sku || undefined,
-          unit: l.unit,
-          costPrice: l.costPrice,
-          unitPrice: l.unitPrice,
-          reorderLevel: l.reorderLevel,
-          isActive: l.status === 'Active',
-          quantity: l.qty,
-          discountPct: l.discountPct,
-          taxPct: l.taxPct,
+        items: createdParts.map(({ line, partId }) => ({
+          vehiclePartId: partId,
+          quantity: line.qty,
+          unitCost: line.costPrice,
         })),
       };
 
@@ -178,6 +273,14 @@ function StockInContent() {
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+      {/* Shared hidden file input for per-line item image uploads */}
+      <input
+        ref={itemImageInputRef}
+        type="file"
+        accept={ACCEPTED_ITEM_IMAGE_TYPES.join(',')}
+        onChange={handleItemImageChange}
+        className="hidden"
+      />
       {/* Top Bar */}
       <div className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-8 py-4 flex items-center gap-4 sticky top-0 z-10">
         <button onClick={() => router.back()} className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
@@ -393,6 +496,83 @@ function StockInContent() {
                 {/* Card Body (Accordion Content - open if not collapsed) */}
                 {!collapsedItems[line.id] && (
                   <div className="p-5 space-y-4 animate-in fade-in duration-200">
+                    {/* Row 0: Item Image */}
+                    <div className="flex items-start gap-4">
+                      <div
+                        tabIndex={0}
+                        role="button"
+                        aria-label={line.imageUrl ? 'Item image — paste, drop, or click to replace' : 'Item image — paste, drop, or click to upload'}
+                        onClick={() => triggerItemImagePicker(line.id)}
+                        onPaste={(e) => handleItemImagePaste(e, line.id)}
+                        onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }}
+                        onDrop={(e) => handleItemImageDrop(e, line.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            triggerItemImagePicker(line.id);
+                          }
+                        }}
+                        className="group relative w-24 h-24 shrink-0 rounded-xl overflow-hidden border border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center cursor-pointer hover:border-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/10 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                      >
+                        {line.imageUrl ? (
+                          <>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={line.imageUrl}
+                              alt={line.partName || 'Part preview'}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 group-focus:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus:opacity-100">
+                              <span className="text-[10px] font-bold text-white uppercase tracking-wider">Replace</span>
+                            </div>
+                          </>
+                        ) : (
+                          <Package className="w-7 h-7 text-zinc-400 group-hover:text-orange-500 transition-colors" />
+                        )}
+                        {imageUploadingFor[line.id] && (
+                          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                            <Loader2 className="w-5 h-5 text-white animate-spin" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <label className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                          Item Image
+                        </label>
+                        <p className="text-xs text-zinc-500 mt-0.5 mb-2">
+                          Click, <kbd className="px-1 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-[10px] font-mono">paste</kbd>, or drop. JPG/PNG/WEBP/GIF up to 5 MB.
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => triggerItemImagePicker(line.id)}
+                            disabled={imageUploadingFor[line.id]}
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-semibold transition-colors"
+                          >
+                            {imageUploadingFor[line.id] ? (
+                              <>
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading…
+                              </>
+                            ) : (
+                              <>
+                                <ImagePlus className="w-3.5 h-3.5" />
+                                {line.imageUrl ? 'Replace image' : 'Upload image'}
+                              </>
+                            )}
+                          </button>
+                          {line.imageUrl && !imageUploadingFor[line.id] && (
+                            <button
+                              type="button"
+                              onClick={() => updateLine(line.id, 'imageUrl', '')}
+                              className="inline-flex items-center gap-1 px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs font-semibold transition-colors"
+                            >
+                              <X className="w-3.5 h-3.5" /> Remove
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Row 1: Part Name (2 cols) + Category (1 col) + SKU (1 col) + Unit (1 col) + Reorder Level (1 col) */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
                       <div className="space-y-1.5 lg:col-span-2 md:col-span-2">
@@ -583,14 +763,14 @@ function StockInContent() {
                 </button>
                 <button
                   onClick={() => handleSubmit(true)}
-                  disabled={submitting || uploading}
+                  disabled={submitting || uploading || anyImageUploading}
                   className="px-6 py-2.5 border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 rounded-xl text-sm font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all disabled:opacity-50"
                 >
                   Save Draft
                 </button>
                 <button
                   onClick={() => handleSubmit(false)}
-                  disabled={submitting || uploading}
+                  disabled={submitting || uploading || anyImageUploading}
                   className="flex items-center gap-2 px-6 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-sm font-semibold shadow-lg shadow-orange-500/20 transition-all active:scale-95 disabled:opacity-50"
                 >
                   <Package className="w-4 h-4" />
