@@ -12,7 +12,7 @@ const settingsSchema = z.object({
   contactPhone: z.string().min(7, "Phone number must be at least 7 characters").optional().or(z.literal("")),
   address: z.string().min(5, "Address must be at least 5 characters").optional().or(z.literal("")),
   currency: z.string().min(1, "Currency symbol is required"),
-  taxRate: z.coerce.number().min(0, "Tax rate cannot be negative").max(100, "Tax rate cannot exceed 100%"),
+  taxRate: z.number().min(0, "Tax rate cannot be negative").max(100, "Tax rate cannot exceed 100%"),
 });
 
 export type SystemSettingsFormValues = z.infer<typeof settingsSchema>;
@@ -100,7 +100,7 @@ export default function SystemSettingsForm({ initialData, onSubmit, isLoading }:
           required
           type="number"
           step="0.01"
-          registration={register("taxRate")}
+          registration={register("taxRate", { valueAsNumber: true })}
           error={errors.taxRate?.message}
           placeholder="e.g. 13"
         />
