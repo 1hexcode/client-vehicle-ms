@@ -24,6 +24,11 @@ interface DataTableProps<T> {
   emptyMessage?: string;
   headerActions?: React.ReactNode;
   pageSize?: number;
+  // Server-side pagination: when all three are provided, the table will not slice
+  // data locally and will instead defer paging to the caller.
+  total?: number;
+  page?: number;
+  onPageChange?: (page: number) => void;
 }
 
 export default function DataTable<T>({
@@ -39,14 +44,25 @@ export default function DataTable<T>({
   emptyMessage = "No records found.",
   headerActions,
   pageSize = 10,
+  total,
+  page: pageProp,
+  onPageChange,
 }: DataTableProps<T>) {
-  const [page, setPage] = useState(1);
+  const serverSide =
+    typeof total === "number" &&
+    typeof pageProp === "number" &&
+    typeof onPageChange === "function";
 
-  // Reset to page 1 when data changes (search/filter)
-  const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
+  const [internalPage, setInternalPage] = useState(1);
+  const page = serverSide ? (pageProp as number) : internalPage;
+  const setPage = serverSide ? (onPageChange as (p: number) => void) : setInternalPage;
+
+  const totalRecords = serverSide ? (total as number) : data.length;
+  const totalPages = Math.max(1, Math.ceil(totalRecords / pageSize));
   const safePage = Math.min(page, totalPages);
   const start = (safePage - 1) * pageSize;
-  const pageData = data.slice(start, start + pageSize);
+  const pageData = serverSide ? data : data.slice(start, start + pageSize);
+  const rangeEnd = serverSide ? start + data.length : Math.min(start + pageSize, totalRecords);
 
   const handlePageChange = (p: number) => setPage(Math.max(1, Math.min(p, totalPages)));
 
@@ -157,8 +173,8 @@ export default function DataTable<T>({
       {!loading && data.length > 0 && (
         <div className="px-6 py-4 border-t border-zinc-100 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-zinc-500">
-            Showing <span className="font-semibold text-zinc-700 dark:text-zinc-300">{start + 1}–{Math.min(start + pageSize, data.length)}</span> of{" "}
-            <span className="font-semibold text-zinc-700 dark:text-zinc-300">{data.length}</span> results
+            Showing <span className="font-semibold text-zinc-700 dark:text-zinc-300">{start + 1}–{rangeEnd}</span> of{" "}
+            <span className="font-semibold text-zinc-700 dark:text-zinc-300">{totalRecords}</span> results
           </p>
           <div className="flex items-center gap-1">
             <button

@@ -24,28 +24,66 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+const PAGE_SIZE = 10;
+const SEARCH_DEBOUNCE_MS = 300;
+
 export default function StaffCustomersPage() {
   const router = useRouter();
   const [customers, setCustomers] = useState<User[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDisableOpen, setIsDisableOpen] = useState(false);
   const [isActivateOpen, setIsActivateOpen] = useState(false);
   const [targetCustomer, setTargetCustomer] = useState<User | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // Debounce search input + reset to page 1 whenever the term changes.
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setDebouncedSearch(searchTerm.trim());
+      setPage(1);
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(id);
+  }, [searchTerm]);
+
   const fetchCustomers = useCallback(async () => {
     try {
       setLoading(true);
-      const res: ApiResponse<User[]> = await api.get("/api/Customers");
-      if (res.success) setCustomers(res.data || []);
+      const params = new URLSearchParams({
+        page: String(page),
+        pageSize: String(PAGE_SIZE),
+      });
+      if (debouncedSearch) params.set("name", debouncedSearch);
+      const path = debouncedSearch ? "/api/Customers/search" : "/api/Customers";
+      const res: ApiResponse<any> = await api.get(`${path}?${params.toString()}`);
+      if (res.success) {
+        const body = res.data;
+        const items: User[] = Array.isArray(body)
+          ? body
+          : Array.isArray(body?.items)
+            ? body.items
+            : Array.isArray(body?.data)
+              ? body.data
+              : [];
+        const t: number =
+          typeof body?.total === "number"
+            ? body.total
+            : typeof body?.totalCount === "number"
+              ? body.totalCount
+              : items.length;
+        setCustomers(items);
+        setTotal(t);
+      }
     } catch (err: any) {
       toast.error(err.message || "Failed to load customers");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page, debouncedSearch]);
 
   useEffect(() => { fetchCustomers(); }, [fetchCustomers]);
 
@@ -207,13 +245,6 @@ export default function StaffCustomersPage() {
     },
   ];
 
-  const filtered = customers.filter(
-    (c) =>
-      c.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.phoneNumber.includes(searchTerm)
-  );
-
   return (
     <>
       <div className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -235,22 +266,26 @@ export default function StaffCustomersPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <StatsCard label="Total Customers" value={customers.length} icon={Users} variant="default" />
-          <StatsCard label="Active" value={customers.filter((c) => c.isActive).length} icon={ShieldCheck} variant="success" />
-          <StatsCard label="Inactive" value={customers.filter((c) => !c.isActive).length} icon={ShieldAlert} variant="danger" />
+          <StatsCard label="Total Customers" value={total} icon={Users} variant="default" />
+          <StatsCard label="Active (this page)" value={customers.filter((c) => c.isActive).length} icon={ShieldCheck} variant="success" />
+          <StatsCard label="Inactive (this page)" value={customers.filter((c) => !c.isActive).length} icon={ShieldAlert} variant="danger" />
         </div>
 
         <DataTable
           columns={columns}
-          data={filtered}
+          data={customers}
           loading={loading}
           keyExtractor={(c) => c.id}
           searchValue={searchTerm}
           onSearchChange={setSearchTerm}
-          searchPlaceholder="Search by name, email, or phone..."
+          searchPlaceholder="Search by name..."
           onRefresh={fetchCustomers}
           emptyIcon={Users}
           emptyMessage="No customers found."
+          pageSize={PAGE_SIZE}
+          total={total}
+          page={page}
+          onPageChange={setPage}
         />
       </div>
 
