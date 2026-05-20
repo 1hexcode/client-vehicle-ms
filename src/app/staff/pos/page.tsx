@@ -49,18 +49,33 @@ export default function StaffPOSPage() {
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
 
   useEffect(() => {
+    // The backend sometimes wraps list responses as { items, total } for paginated
+    // endpoints — accept either shape so POS keeps working if pagination is added.
+    const toList = <T,>(body: any): T[] => {
+      if (Array.isArray(body)) return body;
+      if (Array.isArray(body?.items)) return body.items;
+      if (Array.isArray(body?.data)) return body.data;
+      return [];
+    };
+
     const fetchData = async () => {
       try {
         setLoading(true);
         const [partsRes, customersRes, vehiclesRes] = await Promise.all([
-          api.get("/api/Parts"),
-          api.get("/api/Customers"),
-          api.get("/api/Vehicles")
-        ]) as [ApiResponse<Part[]>, ApiResponse<User[]>, ApiResponse<Vehicle[]>];
+          api.get("/api/Parts?page=1&pageSize=1000"),
+          api.get("/api/Customers?page=1&pageSize=1000"),
+          api.get("/api/Vehicles?page=1&pageSize=1000"),
+        ]) as [ApiResponse<any>, ApiResponse<any>, ApiResponse<any>];
 
-        if (partsRes.success) setParts((partsRes.data || []).filter(p => p.isActive && p.stockQuantity > 0));
-        if (customersRes.success) setCustomers((customersRes.data || []).filter(c => c.isActive));
-        if (vehiclesRes.success) setVehicles(vehiclesRes.data || []);
+        if (partsRes.success) {
+          setParts(toList<Part>(partsRes.data).filter(p => p.isActive && p.stockQuantity > 0));
+        }
+        if (customersRes.success) {
+          setCustomers(toList<User>(customersRes.data).filter(c => c.isActive));
+        }
+        if (vehiclesRes.success) {
+          setVehicles(toList<Vehicle>(vehiclesRes.data));
+        }
       } catch (error) {
         toast.error("Failed to load POS data");
       } finally {
